@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Entregador</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<style>
+:root{
+  --primary:#22c55e;
+  --secondary:#2563eb;
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family: system-ui, -apple-system, Arial, sans-serif;
+  background:var(--bg);
+  color:var(--text);
+}
+
+header{
+  background:linear-gradient(135deg,#16a34a,#22c55e);
+  color:#fff;
+  padding:18px 12px;
+  text-align:center;
+  font-size:18px;
+  font-weight:600;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+.container{
+  padding:12px;
+}
+
+.card{
+  background:var(--card);
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:14px;
+  box-shadow:0 8px 20px rgba(0,0,0,.08);
+  animation:fade .3s ease;
+}
+
+@keyframes fade{
+  from{opacity:0; transform:translateY(5px)}
+  to{opacity:1; transform:translateY(0)}
+}
+
+.row{
+  display:flex;
+  justify-content:space-between;
+  margin-bottom:6px;
+  font-size:14px;
+}
+
+.label{
+  color:var(--muted);
+  font-weight:500;
+}
+
+.value{
+  font-weight:600;
+  text-align:right;
+  max-width:60%;
+}
+
+.btn{
+  width:100%;
+  padding:13px;
+  margin-top:10px;
+  border:none;
+  border-radius:12px;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+}
+
+.btn-mapa{
+  background:var(--secondary);
+  color:#fff;
+}
+
+.btn-pegar{
+  background:var(--primary);
+  color:#fff;
+}
+
+.btn:active{
+  transform:scale(.97);
+}
+
+.vazio{
+  margin-top:60px;
+  text-align:center;
+  color:var(--muted);
+  font-size:15px;
+}
+</style>
+</head>
+<body>
+
+<header>
+🚚 Coletas pendentes
+</header>
+
+<div class="container">
+
+{% for p in pedidos %}
+<div class="card">
+
+  <div class="row">
+    <div class="label">Cliente</div>
+    <div class="value">{{p.cliente}}</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Endereço</div>
+    <div class="value">{{p.endereco}}</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Ferramenta</div>
+    <div class="value">{{p.ferramenta}}</div>
+  </div>
+
+  <div class="row">
+    <div class="label">Quantidade</div>
+    <div class="value">{{p.quantidade}}</div>
+  </div>
+
+  <a href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | replace(' ', '+') }}" target="_blank">
+    <button class="btn btn-mapa">📍 Abrir no mapa</button>
+  </a>
+
+  <a href="/pegar/{{p.id}}">
+    <button class="btn btn-pegar">✔ Marcar como pego</button>
+  </a>
+
+</div>
+{% else %}
+<div class="vazio">
+📭 Nenhuma coleta pendente
+</div>
+{% endfor %}
+
+</div>
+
+</body>
+</html>
