@@ -9,142 +9,116 @@
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 
 <style>
-:root {
-  --primary: #2563eb;
-  --success: #16a34a;
-  --bg: #f8fafc;
-  --card: #ffffff;
-  --text: #0f172a;
-  --muted: #64748b;
-  --radius: 18px;
-  --border: #e5e7eb;
+:root{
+  --primary:#2563eb;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e5e7eb;
+  --radius:16px;
 }
 
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+*{box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif}
 
-body {
-  margin: 0;
-  font-family: 'Plus Jakarta Sans', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  padding-bottom: 40px;
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  padding-bottom:40px;
 }
 
-header {
-  background: #ffffff;
-  padding: 15px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+header{
+  background:#fff;
+  padding:14px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  font-weight:700;
+  color:var(--primary);
 }
 
-header img { height: 35px; }
+.container{padding:16px}
 
-header h1 {
-  font-size: 16px;
-  margin: 0;
-  font-weight: 700;
-  color: var(--primary);
-  text-transform: uppercase;
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:16px;
+  margin-bottom:16px;
+  border:1px solid var(--border);
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
 }
 
-.container { padding: 16px; }
-
-.btn-som {
-  background: #fff;
-  border: 1px solid var(--border);
-  color: var(--text);
-  width: calc(100% - 32px);
-  margin: 10px 16px;
-  padding: 10px;
-  border-radius: 12px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
+.label{
+  font-size:11px;
+  text-transform:uppercase;
+  color:var(--muted);
+  font-weight:700;
 }
 
-.card {
-  background: var(--card);
-  border-radius: var(--radius);
-  padding: 20px;
-  margin-bottom: 20px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.04);
-  animation: slideIn 0.3s ease;
+.value{
+  font-weight:600;
+  margin-bottom:6px;
 }
 
-@keyframes slideIn {
-  from { opacity: 0; transform: translateY(15px); }
-  to { opacity: 1; transform: translateY(0); }
+.itens-box{
+  background:#f1f5f9;
+  padding:10px;
+  border-radius:10px;
+  margin-top:4px;
 }
 
-.info-grid { display: grid; gap: 12px; margin-bottom: 15px; }
-
-.label {
-  font-size: 11px;
-  color: var(--muted);
-  text-transform: uppercase;
-  font-weight: 700;
+.item-linha{
+  font-size:14px;
+  margin-bottom:4px;
 }
 
-.value { font-size: 15px; font-weight: 600; }
-
-.address-box {
-  background: #f1f5f9;
-  padding: 10px;
-  border-radius: 10px;
+.actions{
+  display:grid;
+  gap:10px;
+  margin-top:12px;
 }
 
-.actions { display: grid; gap: 10px; }
-
-.btn {
-  padding: 14px;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 700;
-  text-align: center;
-  text-decoration: none;
+.btn{
+  padding:12px;
+  border-radius:12px;
+  font-weight:700;
+  text-align:center;
+  text-decoration:none;
+  display:block;
 }
 
-.btn-mapa {
-  background: #e8f5e9;
-  color: #2e7d32;
+.btn-mapa{
+  background:#e0f2fe;
+  color:#0369a1;
 }
 
-.btn-pegar {
-  background: var(--primary);
-  color: #fff;
+.btn-pegar{
+  background:var(--primary);
+  color:#fff;
 }
 
-.vazio {
-  margin-top: 80px;
-  text-align: center;
-  color: var(--muted);
+.vazio{
+  text-align:center;
+  margin-top:60px;
+  color:var(--muted);
 }
 
-.qty-badge {
-  background: var(--primary);
-  color: white;
-  padding: 2px 8px;
-  border-radius: 6px;
-  font-size: 12px;
+.btn-som{
+  width:calc(100% - 32px);
+  margin:12px 16px;
+  padding:10px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#fff;
+  font-weight:600;
 }
 </style>
 </head>
 <body>
 
-<header>
-  <h1>Entregas</h1>
-</header>
+<header>🚚 Coletas Pendentes</header>
 
-<button class="btn-som" onclick="ativarSom()">
-  🔊 Ativar som de notificação
-</button>
+<button class="btn-som" onclick="ativarSom()">🔊 Ativar som de notificação</button>
 
 <audio id="som" preload="auto">
   <source src="/static/notificacao.mp3" type="audio/mpeg">
@@ -154,21 +128,18 @@ header h1 {
 
 {% for p in pedidos %}
 <div class="card" id="pedido-{{p.id}}">
-  <div class="info-grid">
-    <div>
-      <span class="label">Cliente</span>
-      <div class="value">{{p.cliente}}</div>
-    </div>
 
-    <div>
-      <span class="label">Endereço</span>
-      <div class="address-box">📍 {{p.endereco}}</div>
-    </div>
+  <div class="label">Cliente</div>
+  <div class="value">{{p.cliente}}</div>
 
-    <div>
-      <span class="label">Item</span>
-      <div class="value">{{p.ferramenta}} <span class="qty-badge">{{p.quantidade}}</span></div>
-    </div>
+  <div class="label">Endereço</div>
+  <div class="value">{{p.endereco}}</div>
+
+  <div class="label">Itens para recolher</div>
+  <div class="itens-box">
+    {% for i in p.itens %}
+      <div class="item-linha">• {{i.nome}} ({{i.qtd}}x)</div>
+    {% endfor %}
   </div>
 
   <div class="actions">
@@ -181,6 +152,7 @@ header h1 {
        ✅ Marcar como pego
     </a>
   </div>
+
 </div>
 {% else %}
 <div class="vazio" id="vazio">📭 Nenhuma coleta pendente</div>
@@ -190,13 +162,13 @@ header h1 {
 
 <script>
 const socket = io();
-let somAtivo = false;
+let somAtivo=false;
 
 function ativarSom(){
-  const audio = document.getElementById("som");
+  const audio=document.getElementById("som");
   audio.play().then(()=>{
     audio.pause();
-    somAtivo = true;
+    somAtivo=true;
     alert("Som ativado!");
   }).catch(()=>{
     alert("Clique novamente para permitir o som.");
@@ -205,28 +177,36 @@ function ativarSom(){
 
 function tocarSom(){
   if(!somAtivo) return;
-  const audio = document.getElementById("som");
-  audio.currentTime = 0;
+  const audio=document.getElementById("som");
+  audio.currentTime=0;
   audio.play().catch(()=>{});
 }
 
 function criarCard(p){
-  if(document.getElementById("pedido-"+p.id)) return;
+  if(document.getElementById("pedido-"+p.id)) return null;
 
-  const div = document.createElement("div");
-  div.className = "card";
-  div.id = "pedido-"+p.id;
+  let itensHtml="";
+  p.itens.forEach(i=>{
+    itensHtml+=`<div class="item-linha">• ${i.nome} (${i.qtd}x)</div>`;
+  });
 
-  div.innerHTML = `
-    <div class="info-grid">
-      <div><span class="label">Cliente</span><div class="value">${p.cliente}</div></div>
-      <div><span class="label">Endereço</span><div class="address-box">📍 ${p.endereco}</div></div>
-      <div><span class="label">Item</span><div class="value">${p.ferramenta} <span class="qty-badge">${p.quantidade}</span></div></div>
-    </div>
+  const div=document.createElement("div");
+  div.className="card";
+  div.id="pedido-"+p.id;
+
+  div.innerHTML=`
+    <div class="label">Cliente</div>
+    <div class="value">${p.cliente}</div>
+
+    <div class="label">Endereço</div>
+    <div class="value">${p.endereco}</div>
+
+    <div class="label">Itens para recolher</div>
+    <div class="itens-box">${itensHtml}</div>
 
     <div class="actions">
       <a class="btn btn-mapa" target="_blank"
-         href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco + ' Aruanã GO')}">
+         href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco+" Aruanã GO")}">
          🧭 Abrir no mapa
       </a>
 
@@ -238,22 +218,22 @@ function criarCard(p){
   return div;
 }
 
-socket.on("novo_pedido", function(pedido){
-  const lista = document.getElementById("lista");
-  const vazio = document.getElementById("vazio");
+socket.on("novo_pedido",function(p){
+  const lista=document.getElementById("lista");
+  const vazio=document.getElementById("vazio");
   if(vazio) vazio.remove();
 
-  const card = criarCard(pedido);
+  const card=criarCard(p);
   if(card) lista.prepend(card);
 
   tocarSom();
 
-  if(Notification.permission === "granted"){
-    new Notification("Nova coleta", { body: pedido.cliente });
+  if(Notification.permission==="granted"){
+    new Notification("Nova coleta",{body:p.cliente});
   }
 });
 
-if(Notification.permission !== "granted"){
+if(Notification.permission!=="granted"){
   Notification.requestPermission();
 }
 </script>
