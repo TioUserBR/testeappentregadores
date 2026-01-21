@@ -1,214 +1,216 @@
-<!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Painel Principal | Sistema de Coletas</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+import os
+from flask import Flask, render_template, request, redirect, jsonify
+from flask_socketio import SocketIO
+import psycopg2
+from psycopg2.extras import RealDictCursor
+from datetime import datetime
+from dotenv import load_dotenv
 
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+load_dotenv()
 
-<style>
-:root {
-  --primary:#2563eb;
-  --success:#16a34a;
-  --warning:#f59e0b;
-  --bg:#f1f5f9;
-  --card:#ffffff;
-  --text:#0f172a;
-  --muted:#64748b;
-  --radius:18px;
-}
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-*{box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif;}
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-}
+# -------------------- DB --------------------
 
-header{
-  background:#fff;
-  padding:16px 24px;
-  border-bottom:1px solid #e5e7eb;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+def get_db():
+    if not DATABASE_URL:
+        raise Exception("DATABASE_URL não configurada")
+    return psycopg2.connect(DATABASE_URL, sslmode="require")
 
-header h1{
-  margin:0;
-  font-size:18px;
-  color:var(--primary);
-}
+def init_db():
+    db = get_db()
+    c = db.cursor()
 
-.container{
-  padding:24px;
-  max-width:1300px;
-  margin:auto;
-}
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS pedidos (
+        id SERIAL PRIMARY KEY,
+        cliente TEXT NOT NULL,
+        endereco TEXT NOT NULL,
+        hora TEXT NOT NULL,
+        status TEXT NOT NULL
+    );
+    """)
 
-.cards{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:20px;
-  margin-bottom:24px;
-}
+    c.execute("""
+    CREATE TABLE IF NOT EXISTS itens (
+        id SERIAL PRIMARY KEY,
+        pedido_id INTEGER REFERENCES pedidos(id) ON DELETE CASCADE,
+        nome TEXT NOT NULL,
+        qtd INTEGER NOT NULL
+    );
+    """)
 
-.card-info{
-  background:var(--card);
-  padding:20px;
-  border-radius:var(--radius);
-  box-shadow:0 6px 18px rgba(0,0,0,.05);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+    db.commit()
+    db.close()
 
-.card-info span{
-  font-size:13px;
-  color:var(--muted);
-}
+init_db()
 
-.card-info strong{
-  font-size:26px;
-}
+# -------------------- FUNÇÕES --------------------
 
-.btns{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
-  gap:16px;
-  margin-bottom:30px;
-}
+def carregar_pedidos(status):
+    db = get_db()
+    c = db.cursor(cursor_factory=RealDictCursor)
 
-.btn{
-  padding:16px;
-  border-radius:14px;
-  background:var(--primary);
-  color:#fff;
-  text-decoration:none;
-  text-align:center;
-  font-weight:700;
-  box-shadow:0 4px 12px rgba(37,99,235,.25);
-}
+    c.execute("SELECT * FROM pedidos WHERE status=%s ORDER BY id DESC", (status,))
+    pedidos_raw = c.fetchall()
 
-.btn.secondary{background:#0ea5e9;}
-.btn.success{background:var(--success);}
+    pedidos = []
 
-.charts{
-  display:grid;
-  grid-template-columns:2fr 1fr;
-  gap:20px;
-}
+    for p in pedidos_raw:
+        c.execute("SELECT nome, qtd FROM itens WHERE pedido_id=%s", (p["id"],))
+        itens = c.fetchall()
 
-@media(max-width:900px){
-  .charts{grid-template-columns:1fr;}
-}
+        pedidos.append({
+            "id": p["id"],
+            "cliente": p["cliente"],
+            "endereco": p["endereco"],
+            "hora": p["hora"],
+            "itens": itens
+        })
 
-.chart-box{
-  background:#fff;
-  border-radius:var(--radius);
-  padding:16px;
-  height:320px;
-  box-shadow:0 6px 18px rgba(0,0,0,.05);
-}
+    db.close()
+    return pedidos
 
-canvas{
-  width:100%!important;
-  height:100%!important;
-}
-</style>
-</head>
-<body>
+# -------------------- HOME (DASHBOARD) --------------------
 
-<header>
-  <h1>📦 Sistema de Coletas</h1>
-  <span style="color:#64748b;font-size:14px;">Dashboard</span>
-</header>
+@app.route("/")
+def home():
+    db = get_db()
+    c = db.cursor()
 
-<div class="container">
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pendente'")
+    pendentes = c.fetchone()[0]
 
-  <!-- CARDS -->
-  <div class="cards">
-    <div class="card-info">
-      <div>
-        <span>Pendentes</span><br>
-        <strong style="color:var(--warning)">{{ pendentes }}</strong>
-      </div> ⏳
-    </div>
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pego'")
+    pegos = c.fetchone()[0]
 
-    <div class="card-info">
-      <div>
-        <span>Coletados</span><br>
-        <strong style="color:var(--success)">{{ pegos }}</strong>
-      </div> ✅
-    </div>
+    c.execute("SELECT COUNT(*) FROM pedidos")
+    total = c.fetchone()[0]
 
-    <div class="card-info">
-      <div>
-        <span>Total</span><br>
-        <strong>{{ total }}</strong>
-      </div> 📊
-    </div>
-  </div>
+    db.close()
 
-  <!-- BOTÕES -->
-  <div class="btns">
-    <a href="/atendente" class="btn">👨‍💼 Painel Atendente</a>
-    <a href="/entregador" class="btn secondary">🚚 Painel Entregador</a>
-    <a href="/pego" class="btn success">📁 Itens Coletados</a>
-  </div>
+    return render_template(
+        "home.html",
+        pendentes=pendentes,
+        pegos=pegos,
+        total=total
+    )
 
-  <!-- GRÁFICOS -->
-  <div class="charts">
-    <div class="chart-box">
-      <h3>📈 Pedidos por Status</h3>
-      <canvas id="graficoBarra"></canvas>
-    </div>
+# -------------------- TELAS --------------------
 
-    <div class="chart-box">
-      <h3>🥧 Distribuição</h3>
-      <canvas id="graficoPizza"></canvas>
-    </div>
-  </div>
+@app.route("/atendente")
+def atendente():
+    pedidos = carregar_pedidos("pendente")
+    return render_template("index.html", pedidos=pedidos)
 
-</div>
+@app.route("/entregador")
+def entregador():
+    pedidos = carregar_pedidos("pendente")
+    return render_template("entregador.html", pedidos=pedidos)
 
-<script>
-const pendentes = {{ pendentes }};
-const pegos = {{ pegos }};
+@app.route("/pego")
+def pego():
+    pedidos = carregar_pedidos("pego")
+    return render_template("pego.html", pedidos=pedidos)
 
-new Chart(document.getElementById("graficoBarra"),{
-  type:"bar",
-  data:{
-    labels:["Pendentes","Coletados"],
-    datasets:[{
-      data:[pendentes,pegos],
-      backgroundColor:["#f59e0b","#16a34a"]
-    }]
-  },
-  options:{
-    responsive:true,
-    maintainAspectRatio:false
-  }
-});
+# -------------------- NOVO PEDIDO --------------------
 
-new Chart(document.getElementById("graficoPizza"),{
-  type:"doughnut",
-  data:{
-    labels:["Pendentes","Coletados"],
-    datasets:[{
-      data:[pendentes,pegos],
-      backgroundColor:["#f59e0b","#16a34a"]
-    }]
-  },
-  options:{
-    responsive:true,
-    maintainAspectRatio:false
-  }
-});
-</script>
+@app.route("/enviar", methods=["POST"])
+def enviar():
+    cliente = request.form.get("cliente")
+    endereco = request.form.get("endereco")
 
-</body>
-</html>
+    ferramentas = request.form.getlist("ferramenta[]")
+    quantidades = request.form.getlist("quantidade[]")
+
+    hora = datetime.now().strftime("%d/%m/%Y %H:%M")
+
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("""
+        INSERT INTO pedidos (cliente, endereco, hora, status)
+        VALUES (%s,%s,%s,'pendente') RETURNING id
+    """, (cliente, endereco, hora))
+
+    pedido_id = c.fetchone()[0]
+
+    itens_socket = []
+
+    for nome, qtd in zip(ferramentas, quantidades):
+        if nome.strip():
+            c.execute("""
+                INSERT INTO itens (pedido_id, nome, qtd)
+                VALUES (%s,%s,%s)
+            """, (pedido_id, nome, int(qtd)))
+
+            itens_socket.append({"nome": nome, "qtd": int(qtd)})
+
+    db.commit()
+    db.close()
+
+    socketio.emit("novo_pedido", {
+        "id": pedido_id,
+        "cliente": cliente,
+        "endereco": endereco,
+        "itens": itens_socket
+    })
+
+    return redirect("/atendente")
+
+# -------------------- PEGAR --------------------
+
+@app.route("/pegar/<int:id>")
+def pegar(id):
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("UPDATE pedidos SET status='pego' WHERE id=%s", (id,))
+
+    db.commit()
+    db.close()
+
+    socketio.emit("pedido_atualizado", {"id": id})
+
+    return redirect("/entregador")
+
+# -------------------- EDITAR --------------------
+
+@app.route("/editar/<int:id>", methods=["POST"])
+def editar(id):
+    cliente = request.form.get("cliente")
+    endereco = request.form.get("endereco")
+
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("""
+        UPDATE pedidos SET cliente=%s, endereco=%s WHERE id=%s
+    """, (cliente, endereco, id))
+
+    db.commit()
+    db.close()
+
+    return jsonify(success=True)
+
+# -------------------- APAGAR --------------------
+
+@app.route("/apagar/<int:id>", methods=["POST"])
+def apagar(id):
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("DELETE FROM pedidos WHERE id=%s", (id,))
+
+    db.commit()
+    db.close()
+
+    return jsonify(success=True)
+
+# -------------------- MAIN --------------------
+
+if __name__ == "__main__":
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
