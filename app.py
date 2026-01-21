@@ -5,6 +5,14 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from dotenv import load_dotenv
+import eventlet
+eventlet.monkey_patch()
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode="eventlet"
+)
+
 
 load_dotenv()
 
@@ -12,6 +20,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = Flask(__name__)
 app.config["SECRET_KEY"] = "segredo"
+
 
 socketio = SocketIO(
     app,
@@ -210,3 +219,4 @@ def apagar(id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port)
+
