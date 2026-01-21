@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Itens Coletados | Sistema 6006</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary:#16a34a;
+  --bg:#f8fafc;
+  --card:#ffffff;
+  --text:#0f172a;
+  --muted:#64748b;
+  --border:#e2e8f0;
+}
+
+*{box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif}
+
+body{margin:0;background:var(--bg);color:var(--text)}
+
+header{
+  background:#fff;
+  border-bottom:1px solid var(--border);
+  padding:14px 24px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:12px;
+}
+
+header img{height:42px}
+header h1{font-size:18px;margin:0;color:var(--primary)}
+
+.container{padding:20px;max-width:1300px;margin:auto}
+
+.actions-bar{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  flex-wrap:wrap;
+  margin-bottom:16px;
+}
+
+.filter-group label{
+  font-size:11px;
+  text-transform:uppercase;
+  font-weight:700;
+  color:var(--muted)
+}
+
+input[type=date]{
+  padding:8px;
+  border-radius:8px;
+  border:1px solid var(--border)
+}
+
+.btn-print{
+  background:var(--primary);
+  color:#fff;
+  border:none;
+  padding:10px 18px;
+  border-radius:10px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.card{
+  background:#fff;
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+}
+
+.table-wrapper{
+  overflow-x:auto;
+}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+
+th,td{
+  border:1px solid #ccc;
+  padding:6px 8px;
+}
+
+th{
+  background:#f1f5f9;
+  text-transform:uppercase;
+  font-size:11px;
+}
+
+.hidden-row{display:none}
+
+/* ===== IMPRESS�O ===== */
+@media print{
+  @page{
+    size: A4 portrait; /* <<< RETRATO */
+    margin: 10mm;
+  }
+}
+
+
+  header,.no-print{display:none!important}
+
+  body{background:#fff}
+
+  table{font-size:10pt}
+
+  th,td{
+    padding:5pt!important;
+  }
+
+  .print-header{
+    display:flex!important;
+    align-items:center;
+    justify-content:center;
+    gap:15px;
+    margin-bottom:12px;
+  }
+}
+
+.print-header{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://i.ibb.co/nM4QKp12/6006.png">
+  <h1>Histórico de Coletas</h1>
+</header>
+
+<div class="container">
+
+<div class="print-header">
+  <img src="https://i.ibb.co/nM4QKp12/6006.png" height="55">
+  <h2>Relatório de Coletas - <span id="dataTitulo">Geral</span></h2>
+</div>
+
+<div class="actions-bar no-print">
+  <div class="filter-group">
+    <label>Filtrar por data</label>
+    <input type="date" id="filtroData" onchange="filtrarPorData()">
+  </div>
+
+  <button class="btn-print" onclick="window.print()">🖨 Imprimir</button>
+</div>
+
+<div class="card">
+
+<h3 id="statusFiltro">Exibindo todos os registros</h3>
+
+<div class="table-wrapper">
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Cliente</th>
+<th>Endereço</th>
+<th>Ferramentas</th>
+<th>Data / Hora</th>
+</tr>
+</thead>
+<tbody>
+
+{% for p in pedidos %}
+<tr class="linha-pedido" data-hora="{{p.hora}}">
+<td>{{loop.index}}</td>
+<td><strong>{{p.cliente}}</strong></td>
+<td>{{p.endereco}}</td>
+<td>
+{% for i in p.itens %}
+• {{i.nome}} ({{i.qtd}}x)<br>
+{% endfor %}
+</td>
+<td>{{p.hora}}</td>
+</tr>
+{% else %}
+<tr>
+<td colspan="5" style="text-align:center;color:#888">Nenhum item coletado</td>
+</tr>
+{% endfor %}
+
+</tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+<script>
+function filtrarPorData(){
+  const input=document.getElementById("filtroData").value;
+  const linhas=document.querySelectorAll(".linha-pedido");
+  const status=document.getElementById("statusFiltro");
+  const titulo=document.getElementById("dataTitulo");
+
+  if(!input){
+    linhas.forEach(l=>l.classList.remove("hidden-row"));
+    status.innerText="Exibindo todos os registros";
+    titulo.innerText="Geral";
+    return;
+  }
+
+  const [ano,mes,dia]=input.split("-");
+  const dataBusca=`${dia}/${mes}/${ano}`;
+
+  let cont=0;
+
+  linhas.forEach(l=>{
+    const hora=l.getAttribute("data-hora")||"";
+    if(hora.includes(dataBusca)){
+      l.classList.remove("hidden-row");
+      cont++;
+    }else{
+      l.classList.add("hidden-row");
+    }
+  });
+
+  status.innerText=cont>0?
+    `Exibindo ${cont} coleta(s) de ${dataBusca}`:
+    `Nenhuma coleta encontrada para ${dataBusca}`;
+
+  titulo.innerText=dataBusca;
+}
+</script>
+
+</body>
+</html>
