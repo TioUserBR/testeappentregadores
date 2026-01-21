@@ -3,4 +3,4 @@ services:
     name: sistema-coletas
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: python app:app --worker-class eventlet -w 1
+    startCommand: python app.py
