@@ -1,313 +1,272 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-<meta charset="UTF-8">
-<title>Informações dos itens coletados | Sistema 6006</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <title>Histórico de Coletas | Locadora do Vale</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --brand-yellow: #ffcc00;
+            --brand-orange: #ff6600;
+            --brand-gradient: linear-gradient(135deg, #ffcc00 0%, #ff6600 100%);
+            --bg-deep: #0a0a0a;
+            --bg-surface: #1a1a1a;
+            --bg-card: rgba(26, 26, 26, 0.8);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0a0;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --radius-xl: 24px;
+            --radius-lg: 18px;
+        }
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Outfit', sans-serif; }
 
-<style>
-:root{
-  --brand-primary:#00dc82;
-  --brand-secondary:#00bbff;
-  --brand-gradient:linear-gradient(135deg,#00dc82,#00bbff);
-  --bg-deep:#0f172a;
-  --bg-surface:#1e293b;
-  --bg-card:rgba(30,41,59,.7);
-  --text-primary:#f8fafc;
-  --text-secondary:#94a3b8;
-  --border-color:rgba(255,255,255,.08);
-}
+        body {
+            background-color: var(--bg-deep);
+            background-image: 
+                radial-gradient(circle at 0% 0%, rgba(255, 204, 0, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(255, 102, 0, 0.05) 0%, transparent 50%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
 
-*{box-sizing:border-box;margin:0;padding:0;font-family:'Outfit',sans-serif}
+        header {
+            background: rgba(10, 10, 10, 0.9);
+            backdrop-filter: blur(20px);
+            border-bottom: 2px solid var(--brand-yellow);
+            padding: 1rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
 
-body{
-  background:var(--bg-deep);
-  color:var(--text-primary);
-  min-height:100vh;
-}
+        .header-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-/* HEADER */
-header{
-  background:rgba(15,23,42,.85);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border-color);
-  padding:16px 24px;
-  position:sticky;
-  top:0;
-  z-index:10;
-}
+        .brand { display: flex; align-items: center; gap: 15px; }
+        .brand-icon {
+            background: var(--brand-gradient);
+            color: #000;
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+        }
 
-.header-container{
-  max-width:1400px;
-  margin:auto;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-}
+        .brand h1 {
+            font-size: 1.1rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+            color: var(--brand-yellow);
+            text-transform: uppercase;
+        }
 
-.logo-section{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
+        .sp-clock {
+            background: var(--bg-surface);
+            border: 1px solid var(--brand-yellow);
+            padding: 8px 20px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-.logo-section img{height:46px}
+        #time-display { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: var(--brand-yellow); font-size: 0.95rem; }
 
-.logo-text h1{
-  font-size:1rem;
-  background:var(--brand-gradient);
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-  text-transform:uppercase;
-}
+        .main-content { max-width: 1400px; margin: 0 auto; padding: 3rem 2rem; }
 
-/* CLOCK */
-.sp-clock{
-  background:var(--bg-surface);
-  padding:6px 16px;
-  border-radius:50px;
-  border:1px solid var(--border-color);
-  display:flex;
-  gap:10px;
-  align-items:center;
-}
+        .control-panel { display: grid; grid-template-columns: 1fr auto; align-items: flex-end; gap: 24px; margin-bottom: 3rem; }
 
-.status-dot{
-  width:8px;
-  height:8px;
-  background:var(--brand-primary);
-  border-radius:50%;
-  box-shadow:0 0 8px var(--brand-primary);
-}
+        .filter-box { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); display: flex; gap: 25px; align-items: center; }
 
-#time-display{
-  font-family:'JetBrains Mono',monospace;
-  color:var(--brand-primary);
-}
+        .input-wrapper label { font-size: 0.75rem; font-weight: 800; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
 
-/* CONTENT */
-.main-content{
-  max-width:1400px;
-  margin:auto;
-  padding:32px 20px;
-}
+        input[type=date] { background: #000; border: 1px solid var(--border-color); color: white; padding: 12px 18px; border-radius: 12px; outline: none; font-weight: 600; }
+        input[type=date]:focus { border-color: var(--brand-yellow); }
 
-.control-panel{
-  display:flex;
-  justify-content:space-between;
-  flex-wrap:wrap;
-  gap:16px;
-  margin-bottom:24px;
-}
+        .btn-premium {
+            background: var(--brand-gradient);
+            color: #000;
+            border: none;
+            padding: 15px 35px;
+            border-radius: 15px;
+            font-weight: 800;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-transform: uppercase;
+            transition: all 0.3s;
+        }
 
-.filter-box{
-  background:var(--bg-card);
-  padding:16px;
-  border-radius:14px;
-  border:1px solid var(--border-color);
-  display:flex;
-  gap:16px;
-  align-items:center;
-}
+        .btn-premium:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(255, 204, 0, 0.3); }
 
-input[type=date]{
-  background:#0b1220;
-  border:1px solid var(--border-color);
-  color:white;
-  padding:8px 12px;
-  border-radius:8px;
-}
+        .data-card { background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-color); overflow: hidden; backdrop-filter: blur(10px); }
 
-.btn-premium{
-  background:var(--brand-gradient);
-  border:none;
-  padding:12px 22px;
-  border-radius:12px;
-  font-weight:700;
-  cursor:pointer;
-}
+        .card-header { padding: 25px 35px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .card-header h2 { font-size: 1.3rem; font-weight: 800; color: var(--brand-yellow); text-transform: uppercase; }
 
-/* TABLE */
-.data-card{
-  background:var(--bg-card);
-  border-radius:18px;
-  border:1px solid var(--border-color);
-  overflow:hidden;
-}
+        .stats-pill { background: rgba(255, 204, 0, 0.1); color: var(--brand-yellow); padding: 8px 20px; border-radius: 100px; font-size: 0.85rem; font-weight: 800; border: 1px solid var(--brand-yellow); }
 
-.card-header{
-  padding:16px 22px;
-  border-bottom:1px solid var(--border-color);
-  display:flex;
-  justify-content:space-between;
-}
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 20px 25px; text-align: left; font-size: 0.75rem; font-weight: 800; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.1em; background: rgba(255, 255, 255, 0.02); }
+        td { padding: 20px 25px; border-bottom: 1px solid var(--border-color); vertical-align: middle; }
 
-.stats-pill{
-  background:rgba(0,220,130,.12);
-  padding:4px 12px;
-  border-radius:50px;
-  color:var(--brand-primary);
-  font-size:13px;
-}
+        .id-tag { font-family: 'JetBrains Mono', monospace; color: var(--brand-orange); font-weight: 700; }
+        .client-name { font-weight: 700; font-size: 1rem; color: #fff; }
+        .address-text { font-size: 0.85rem; color: var(--text-secondary); }
+        
+        .tool-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tool-chip { background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border-color); padding: 5px 12px; border-radius: 8px; font-size: 0.85rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 6px; }
+        .tool-chip .qty { color: var(--brand-yellow); font-weight: 800; font-family: 'JetBrains Mono', monospace; background: rgba(255, 204, 0, 0.1); padding: 2px 6px; border-radius: 4px; }
 
-.table-wrapper{overflow-x:auto}
+        .timestamp { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-secondary); font-weight: 600; white-space: nowrap; }
+        .timestamp i { color: var(--brand-orange); }
 
-table{width:100%;border-collapse:collapse}
+        .hidden-row { display: none; }
 
-th{
-  padding:14px;
-  font-size:12px;
-  color:var(--text-secondary);
-  text-align:left;
-}
-
-td{
-  padding:14px;
-  border-top:1px solid var(--border-color);
-}
-
-.tool-chip{
-  display:inline-block;
-  margin:2px;
-  padding:3px 8px;
-  border-radius:6px;
-  background:rgba(255,255,255,.06);
-  font-size:12px;
-}
-
-.hidden-row{display:none}
-
-/* PRINT */
-@media print{
-  @page{size:A4 portrait;margin:10mm}
-
-  body{background:white;color:black}
-
-  header,.control-panel,.sp-clock{display:none!important}
-
-  .print-only{display:block!important;text-align:center;margin-bottom:20px}
-
-  .data-card{background:white;border:1px solid #ccc}
-
-  th,td{color:black;border:1px solid #ccc}
-
-  .tool-chip{border:1px solid #aaa;color:black}
-}
-
-.print-only{display:none}
-</style>
+        @media print {
+            @page { size: A4 landscape; margin: 10mm; }
+            body { background: white; color: black; }
+            header, .no-print, .sp-clock { display: none !important; }
+            .main-content { padding: 0; }
+            .data-card { border: 2px solid #000; box-shadow: none; background: white; }
+            th { background: #eee !important; color: #000 !important; border-bottom: 2px solid #000; }
+            td { border-bottom: 1px solid #ddd; color: black !important; }
+            .client-name { color: black; }
+            .address-text { color: #333; }
+            .tool-chip { border: 1px solid #000; color: black; background: none; }
+            .tool-chip .qty { background: #eee; color: black; border: 1px solid #000; }
+            .print-only { display: block !important; text-align: center; margin-bottom: 30px; }
+        }
+        .print-only { display: none; }
+    </style>
 </head>
 <body>
 
 <header>
-  <div class="header-container">
-    <div class="logo-section">
-      <img src="https://i.ibb.co/nM4QKp12/6006.png">
-      <div class="logo-text"><h1>Itens Coletados</h1></div>
+    <div class="header-container">
+        <div class="brand">
+            <div class="brand-icon"><i class="fas fa-history"></i></div>
+            <h1>Informações dos itens coletados</h1>
+        </div>
+        <div class="sp-clock no-print">
+            <span id="time-display">00:00:00</span>
+        </div>
     </div>
-    <div class="sp-clock">
-      <div class="status-dot"></div>
-      <span id="time-display">00:00:00</span>
-    </div>
-  </div>
 </header>
 
 <div class="main-content">
+    <div class="print-only">
+        <h1 style="color: black; text-transform: uppercase;">Relatório de Coletas - Locadora do Vale</h1>
+        <p>Sincronizado em: <span class="current-date"></span></p>
+    </div>
 
-<div class="print-only">
-  <img src="https://i.ibb.co/nM4QKp12/6006.png" height="60"><br>
-  <strong>Relatório de Itens Coletados</strong><br>
-  <span class="current-date"></span>
-</div>
+    <div class="control-panel no-print">
+        <div class="filter-box">
+            <div class="input-wrapper">
+                <label>Filtrar por Data</label>
+                <input type="date" id="dateFilter" onchange="applyFilter()">
+            </div>
+        </div>
+        <button class="btn-premium" onclick="window.print()">
+            <i class="fas fa-print"></i> Imprimir Relatório
+        </button>
+    </div>
 
-<div class="control-panel">
-  <div class="filter-box">
-    <label>Filtrar por data:</label>
-    <input type="date" id="dateFilter" onchange="applyFilter()">
-  </div>
-  <button class="btn-premium" onclick="window.print()"> Imprimir</button>
-</div>
-
-<div class="data-card">
-  <div class="card-header">
-    <span id="displayTitle">Histórico completo</span>
-    <span class="stats-pill" id="counterBadge">Total: {{ pedidos|length }}</span>
-  </div>
-
-  <div class="table-wrapper">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>Cliente</th>
-          <th>Endereço</th>
-          <th>Itens</th>
-          <th>Data/Hora</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody">
-      {% for p in pedidos %}
-        <tr class="row-item" data-hora="{{p.hora}}">
-          <td>{{loop.index}}</td>
-          <td>{{p.cliente}}</td>
-          <td>{{p.endereco}}</td>
-          <td>
-            {% for i in p.itens %}
-              <span class="tool-chip">{{i.nome}} x{{i.qtd}}</span>
-            {% endfor %}
-          </td>
-          <td>{{p.hora}}</td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
-
+    <div class="data-card">
+        <div class="card-header">
+            <h2 id="displayTitle">Histórico de Operações</h2>
+            <span class="stats-pill" id="counterBadge">Total: {{pedidos|length}} Registros</span>
+        </div>
+        
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 70px">Ref.</th>
+                        <th style="width: 180px">Cliente</th>
+                        <th style="width: 250px">Endereço</th>
+                        <th>Máquinas & Ferramentas</th>
+                        <th style="width: 180px">Data / Hora (SP)</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    {% for p in pedidos %}
+                    <tr class="row-item" data-hora="{{p.hora}}">
+                        <td><span class="id-tag">#{{loop.index | string | zfill(3)}}</span></td>
+                        <td><span class="client-name">{{p.client}}</span></td>
+                        <td><span class="address-text">{{p.endereco}}</span></td>
+                        <td>
+                            <div class="tool-grid">
+                                {% for i in p.itens %}
+                                <span class="tool-chip">
+                                    <span class="qty">{{i.qtd}}x</span>
+                                    {{i.nome}}
+                                </span>
+                                {% endfor %}
+                            </div>
+                        </td>
+                        <td>
+                            <div class="timestamp"><i class="far fa-clock"></i> {{p.hora}}</div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 
 <script>
-function startClock(){
-  setInterval(()=>{
-    const now=new Date();
-    const time=now.toLocaleTimeString("pt-BR",{timeZone:"America/Sao_Paulo"});
-    document.getElementById("time-display").innerText=time;
-
-    const dateFull=now.toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
-    document.querySelectorAll(".current-date").forEach(e=>e.innerText=dateFull);
-  },1000);
-}
-
-function applyFilter(){
-  const val=document.getElementById("dateFilter").value;
-  const rows=document.querySelectorAll(".row-item");
-  let count=0;
-
-  if(!val){
-    rows.forEach(r=>r.classList.remove("hidden-row"));
-    document.getElementById("counterBadge").innerText="Total: "+rows.length;
-    return;
-  }
-
-  const [y,m,d]=val.split("-");
-  const key=`${d}/${m}/${y}`;
-
-  rows.forEach(r=>{
-    if(r.dataset.hora.includes(key)){
-      r.classList.remove("hidden-row");
-      count++;
-    }else{
-      r.classList.add("hidden-row");
+    function startClock() {
+        const update = () => {
+            const now = new Date();
+            const timeStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);
+            document.getElementById('time-display').textContent = timeStr + " (SP)";
+            const dateStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'full', timeStyle: 'short' }).format(now);
+            document.querySelectorAll('.current-date').forEach(el => el.textContent = dateStr);
+        };
+        setInterval(update, 1000);
+        update();
     }
-  });
 
-  document.getElementById("counterBadge").innerText="Encontrados: "+count;
-}
-
-startClock();
+    function applyFilter() {
+        const dateVal = document.getElementById("dateFilter").value;
+        const rows = document.querySelectorAll(".row-item");
+        const title = document.getElementById("displayTitle");
+        const badge = document.getElementById("counterBadge");
+        if (!dateVal) {
+            rows.forEach(r => r.classList.remove("hidden-row"));
+            title.innerText = "Histórico de Operações";
+            badge.innerText = `Total: ${rows.length} Registros`;
+            return;
+        }
+        const [y, m, d] = dateVal.split("-");
+        const searchTag = `${d}/${m}/${y}`;
+        let count = 0;
+        rows.forEach(r => {
+            const rowTime = r.getAttribute("data-hora") || "";
+            if (rowTime.includes(searchTag)) { r.classList.remove("hidden-row"); count++; }
+            else { r.classList.add("hidden-row"); }
+        });
+        title.innerText = `Operações de ${searchTag}`;
+        badge.innerText = `Encontrados: ${count}`;
+    }
+    window.onload = startClock;
 </script>
 
 </body>
