@@ -113,6 +113,33 @@
         .vazio p { font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
     </style>
 </head>
+    <script>
+const socket = io();
+
+/* ===== PERMISSÃO DE NOTIFICAÇÃO ===== */
+if ("Notification" in window) {
+    if (Notification.permission === "default") {
+        Notification.requestPermission();
+    }
+}
+
+/* ===== QUANDO CHEGAR NOVO PEDIDO ===== */
+socket.on("novo_pedido", function(p){
+
+    // Som (se já existir no seu código)
+    tocarSom?.();
+
+    // Notificação do sistema (NÍVEL 3)
+    if (Notification.permission === "granted") {
+        new Notification("🚚 Nova coleta disponível", {
+            body: `Cliente: ${p.cliente}\nEndereço: ${p.endereco}`,
+            icon: "/static/icon.png" // opcional
+        });
+    }
+
+});
+</script>
+
 <body>
 
 <header>
@@ -247,3 +274,4 @@
 </script>
 </body>
 </html>
+
