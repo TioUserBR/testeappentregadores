@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Sistema de Coletas</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+:root{
+  --primary:#2563eb;
+  --success:#16a34a;
+  --warning:#f59e0b;
+  --bg:#f1f5f9;
+  --card:#ffffff;
+  --text:#0f172a;
+}
+
+*{box-sizing:border-box}
+
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Arial,sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.card{
+  background:var(--card);
+  padding:24px;
+  border-radius:18px;
+  width:100%;
+  max-width:360px;
+  text-align:center;
+  box-shadow:0 10px 25px rgba(0,0,0,.1);
+}
+
+h1{
+  margin-bottom:20px;
+  font-size:22px;
+}
+
+.btn{
+  display:block;
+  width:100%;
+  padding:14px;
+  margin:10px 0;
+  border:none;
+  border-radius:12px;
+  font-size:16px;
+  font-weight:600;
+  color:#fff;
+  cursor:pointer;
+  text-decoration:none;
+}
+
+.btn-atendente{background:var(--primary);}
+.btn-entregador{background:var(--success);}
+.btn-pego{background:var(--warning);}
+
+.btn:active{
+  transform:scale(0.97);
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h1>📦 Sistema de Coletas</h1>
+
+  <a class="btn btn-atendente" href="/atendente">
+    Painel do Atendente
+  </a>
+
+  <a class="btn btn-entregador" href="/entregador">
+    Painel do Entregador
+  </a>
+
+  <a class="btn btn-pego" href="/pego">
+    Itens Coletados
+  </a>
+</div>
+
+</body>
+</html>
