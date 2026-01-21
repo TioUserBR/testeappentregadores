@@ -11,14 +11,14 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*")
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
 
 # -------------------- DB --------------------
 
 def get_db():
     if not DATABASE_URL:
         raise Exception("DATABASE_URL não configurada")
-    return psycopg2.connect(DATABASE_URL, sslmode="require")
+    return psycopg2.connect(DATABASE_URL, sslmode="require", connect_timeout=5)
 
 def init_db():
     db = get_db()
@@ -74,7 +74,7 @@ def carregar_pedidos(status):
     db.close()
     return pedidos
 
-# -------------------- HOME (DASHBOARD) --------------------
+# -------------------- HOME --------------------
 
 @app.route("/")
 def home():
@@ -92,12 +92,7 @@ def home():
 
     db.close()
 
-    return render_template(
-        "home.html",
-        pendentes=pendentes,
-        pegos=pegos,
-        total=total
-    )
+    return render_template("home.html", pendentes=pendentes, pegos=pegos, total=total)
 
 # -------------------- TELAS --------------------
 
@@ -169,7 +164,6 @@ def pegar(id):
     c = db.cursor()
 
     c.execute("UPDATE pedidos SET status='pego' WHERE id=%s", (id,))
-
     db.commit()
     db.close()
 
@@ -204,7 +198,6 @@ def apagar(id):
     c = db.cursor()
 
     c.execute("DELETE FROM pedidos WHERE id=%s", (id,))
-
     db.commit()
     db.close()
 
@@ -213,4 +206,4 @@ def apagar(id):
 # -------------------- MAIN --------------------
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000)
