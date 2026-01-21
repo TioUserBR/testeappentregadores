@@ -113,44 +113,56 @@
         .vazio p { font-weight: 800; font-size: 1.2rem; text-transform: uppercase; letter-spacing: 0.1em; }
     </style>
 </head>
- <script>
-const socket = io({
-  transports: ["websocket"],
-  upgrade: false
-});
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
-/* ===== APÓS CARREGAR A PÁGINA ===== */
-window.addEventListener("load", () => {
+<audio id="somNotificacao" src="/static/notificacao.mp3" preload="auto"></audio>
 
-  if ("Notification" in window) {
-    if (Notification.permission === "default") {
-      Notification.requestPermission().then(p => {
-        console.log("Permissão de notificação:", p);
-      });
-    }
+<script>
+let sistemaAtivo = false;
+
+function ativarSistema(){
+  const audio = document.getElementById("somNotificacao");
+
+  audio.play().then(()=>{
+    audio.pause();
+    sistemaAtivo = true;
+    alert("Sistema ativado. Você receberá alertas.");
+  });
+
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission();
   }
+}
 
+const socket = io({
+  transports: ["websocket"]
 });
 
-/* ===== QUANDO CHEGAR NOVO PEDIDO ===== */
-socket.on("novo_pedido", function(p){
+socket.on("connect", () => {
+  console.log("Conectado");
+});
 
-  tocarSom?.();
+socket.on("novo_pedido", (p) => {
 
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification("🚚 Nova coleta disponível", {
-      body: `Cliente: ${p.cliente}\nEndereço: ${p.endereco}`,
-      icon: "/static/icon.png"
+  if (!sistemaAtivo) return;
+
+  // som
+  const audio = document.getElementById("somNotificacao");
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
+
+  // notificação
+  if (Notification.permission === "granted") {
+    new Notification("🚚 Nova coleta", {
+      body: `${p.cliente} - ${p.endereco}`
     });
   }
 
-});
-
-/* ===== DEBUG ===== */
-socket.on("connect", () => {
-  console.log("✅ Entregador conectado via WebSocket");
+  // atualiza lista automaticamente
+  location.reload();
 });
 </script>
+
     
 <body>
 
@@ -286,5 +298,6 @@ socket.on("connect", () => {
 </script>
 </body>
 </html>
+
 
 
