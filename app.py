@@ -16,6 +16,8 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 # -------------------- DB --------------------
 
 def get_db():
+    if not DATABASE_URL:
+        raise Exception("DATABASE_URL não configurada")
     return psycopg2.connect(DATABASE_URL, sslmode="require")
 
 def init_db():
@@ -72,10 +74,15 @@ def carregar_pedidos(status):
     db.close()
     return pedidos
 
-# -------------------- ROTAS --------------------
+# -------------------- ROTAS PRINCIPAIS --------------------
 
 @app.route("/")
-def index():
+def home():
+    # Tela inicial com botões
+    return render_template("home.html")
+
+@app.route("/atendente")
+def atendente():
     pedidos = carregar_pedidos("pendente")
     return render_template("index.html", pedidos=pedidos)
 
@@ -132,7 +139,7 @@ def enviar():
         "itens": itens_socket
     })
 
-    return redirect("/")
+    return redirect("/atendente")
 
 # -------------------- PEGAR --------------------
 
@@ -143,6 +150,9 @@ def pegar(id):
     c.execute("UPDATE pedidos SET status='pego' WHERE id=%s", (id,))
     db.commit()
     db.close()
+
+    socketio.emit("pedido_atualizado", {"id": id})
+
     return redirect("/entregador")
 
 # -------------------- EDITAR --------------------
@@ -180,4 +190,4 @@ def apagar(id):
 # -------------------- MAIN --------------------
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
