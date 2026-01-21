@@ -1,14 +1,22 @@
+# -*- coding: utf-8 -*-
+
 from flask import Flask, render_template, request, redirect, jsonify
-from flask_socketio import SocketIO, emit
+from flask_socketio import SocketIO
 import json
 import os
 import datetime
 
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
+
 socketio = SocketIO(app, cors_allowed_origins="*")
 
 ARQ = "pedidos.json"
 
+
+# ======================
+# Utilidades
+# ======================
 
 def carregar():
     if not os.path.exists(ARQ):
@@ -17,7 +25,7 @@ def carregar():
         with open(ARQ, "r", encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, IOError):
-        return []  # evita crash se o arquivo estiver corrompido
+        return []
 
 
 def salvar(dados):
@@ -25,68 +33,123 @@ def salvar(dados):
         with open(ARQ, "w", encoding="utf-8") as f:
             json.dump(dados, f, indent=2, ensure_ascii=False)
     except IOError as e:
-        print(f"Erro ao salvar pedidos: {e}")
+        print("Erro ao salvar:", e)
 
+
+def agora_data():
+    return datetime.datetime.now().strftime("%d/%m/%Y")
+
+
+def agora_hora():
+    return datetime.datetime.now().strftime("%H:%M:%S")
+
+
+# ======================
+# Rotas principais
+# ======================
 
 @app.route("/")
-def atendente():
-    todos_pedidos = carregar()
-    pedidos_pendentes = [
-        p for p in todos_pedidos
-        if p.get("status") == "pendente"
-    ]
-    return render_template("index.html", pedidos=pedidos_pendentes)
+def home():
+    return render_template("home.html")
 
+
+@app.route("/atendente")
+def atendente():
+    todos = carregar()
+    pendentes = [p for p in todos if p.get("status") == "pendente"]
+    return render_template("index.html", pedidos=pendentes)
+
+
+@app.route("/entregador")
+def entregador():
+    todos = carregar()
+    pendentes = [p for p in todos if p.get("status") == "pendente"]
+    return render_template("entregador.html", pedidos=pendentes)
+
+
+@app.route("/pego")
+def pegos():
+    todos = carregar()
+    pegos = [p for p in todos if p.get("status") == "pego"]
+    return render_template("pego.html", pedidos=pegos)
+
+
+# ======================
+# Ações
+# ======================
 
 @app.route("/enviar", methods=["POST"])
 def enviar():
     dados = carregar()
 
     novo_pedido = {
-        "id": int(datetime.datetime.now().timestamp() * 1000),  # mais precisão
+        "id": int(datetime.datetime.now().timestamp() * 1000),
         "cliente": request.form.get("cliente", "").strip(),
         "endereco": request.form.get("endereco", "").strip(),
         "ferramenta": request.form.get("ferramenta", "").strip(),
         "quantidade": request.form.get("quantidade", "1").strip(),
         "status": "pendente",
-        "hora": datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
+        "data": agora_data(),
+        "hora": agora_hora()
     }
 
     dados.append(novo_pedido)
     salvar(dados)
 
-    # Notifica todos os conectados (entregadores, etc)
     socketio.emit("novo_pedido", novo_pedido)
 
-    return redirect("/")
-
-
-@app.route("/entregador")
-def entregador():
-    todos_pedidos = carregar()
-    pedidos_pendentes = [
-        p for p in todos_pedidos
-        if p.get("status") == "pendente"
-    ]
-    return render_template("entregador.html", pedidos=pedidos_pendentes)
+    return redirect("/atendente")
 
 
 @app.route("/pegar/<int:id>")
 def pegar(id):
     dados = carregar()
-    pedido_encontrado = False
 
     for p in dados:
         if p.get("id") == id and p.get("status") == "pendente":
             p["status"] = "pego"
-            pedido_encontrado = True
+            salvar(dados)
+            socketio.emit("pedido_atualizado", {"id": id, "status": "pego"})
             break
 
-    if pedido_encontrado:
-        salvar(dados)
-        socketio.emit("pedido_atualizado", {"id": id, "status": "pego"})
-
     return redirect("/entregador")
+
+
+@app.route("/editar/<int:id>", methods=["POST"])
+def editar(id):
+    dados = carregar()
+    cliente = request.form.get("cliente", "").strip()
+    endereco = request.form.get("endereco", "").strip()
+
+    for p in dados:
+        if p.get("id") == id:
+            if cliente:
+                p["cliente"] = cliente
+            if endereco:
+                p["endereco"] = endereco
+
+            salvar(dados)
+            socketio.emit("pedido_atualizado", {
+                "id": id,
+                "cliente": cliente,
+                "endereco": endereco
+            })
+            return jsonify({"success": True})
+
+    return jsonify({"success": False}), 404
+
+
+@app.route("/apagar/<int:id>", methods=["POST"])
+def apagar(id):
+    dados = carregar()
+    novo = [p for p in dados if p.get("id") != id]
+
+    if len(novo) != len(dados):
+        salvar(novo)
+        socketio.emit("pedido_apagado", {"id": id})
+        return jsonify({"success": True})
+
+    return jsonify({"success": False}), 404
 
 
 @app.route("/api/novos_pedidos")
@@ -96,58 +159,15 @@ def novos_pedidos():
     return jsonify(pendentes)
 
 
-@app.route("/pego")
-def pegos():
-    todos_pedidos = carregar()
-    pedidos_pegos = [
-        p for p in todos_pedidos
-        if p.get("status") == "pego"
-    ]
-    return render_template("pego.html", pedidos=pedidos_pegos)
+# ======================
+# Inicialização
+# ======================
 
-@app.route("/editar/<int:id>", methods=["POST"])
-def editar(id):
-    dados = carregar()
-    novo_cliente = request.form.get("cliente", "").strip()
-    novo_endereco = request.form.get("endereco", "").strip()
-
-    atualizado = False
-    for p in dados:
-        if p.get("id") == id:
-            if novo_cliente:
-                p["cliente"] = novo_cliente
-            if novo_endereco:
-                p["endereco"] = novo_endereco
-            atualizado = True
-            break
-
-    if atualizado:
-        salvar(dados)
-        socketio.emit("pedido_atualizado", {"id": id, "cliente": novo_cliente, "endereco": novo_endereco})
-        return jsonify({"success": True})
-    else:
-        return jsonify({"success": False, "error": "Pedido não encontrado"}), 404
-
-@app.route("/apagar/<int:id>", methods=["POST"])
-def apagar(id):
-    dados = carregar()
-    dados_antigos = len(dados)
-    
-    dados = [p for p in dados if p.get("id") != id]
-    
-    if len(dados) < dados_antigos:
-        salvar(dados)
-        socketio.emit("pedido_apagado", {"id": id})
-        return jsonify({"success": True})
-    else:
-        return jsonify({"success": False, "error": "Pedido não encontrado"}), 404
-        
 if __name__ == "__main__":
-    # Rode em 0.0.0.0 para ser acessível fora do localhost (ex: Termux, celular, rede local)
     socketio.run(
         app,
         host="0.0.0.0",
         port=5000,
         debug=True,
-        allow_unsafe_werkzeug=True  # necessário em algumas versões recentes do Flask
+        allow_unsafe_werkzeug=True
     )
