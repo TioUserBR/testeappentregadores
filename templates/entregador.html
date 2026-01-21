@@ -114,55 +114,6 @@
     </style>
 </head>
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
-
-<audio id="somNotificacao" src="/static/notificacao.mp3" preload="auto"></audio>
-
-<script>
-let sistemaAtivo = false;
-
-function ativarSistema(){
-  const audio = document.getElementById("somNotificacao");
-
-  audio.play().then(()=>{
-    audio.pause();
-    sistemaAtivo = true;
-    alert("Sistema ativado. Você receberá alertas.");
-  });
-
-  if ("Notification" in window && Notification.permission === "default") {
-    Notification.requestPermission();
-  }
-}
-
-const socket = io({
-  transports: ["websocket"]
-});
-
-socket.on("connect", () => {
-  console.log("Conectado");
-});
-
-socket.on("novo_pedido", (p) => {
-
-  if (!sistemaAtivo) return;
-
-  // som
-  const audio = document.getElementById("somNotificacao");
-  audio.currentTime = 0;
-  audio.play().catch(()=>{});
-
-  // notificação
-  if (Notification.permission === "granted") {
-    new Notification("🚚 Nova coleta", {
-      body: `${p.cliente} - ${p.endereco}`
-    });
-  }
-
-  // atualiza lista automaticamente
-  location.reload();
-});
-</script>
-
     
 <body>
 
@@ -218,86 +169,125 @@ socket.on("novo_pedido", (p) => {
         {% endfor %}
     </div>
 </div>
+    
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <script>
-    const socket = io({ transports:["websocket"] });
-    let somAtivo = false;
+const socket = io({
+    transports: ["websocket"],
+    reconnection: true,
+    reconnectionAttempts: 10,
+    timeout: 20000
+});
 
-    function ativarSom() {
-        const audio = document.getElementById("som");
-        audio.play().then(() => {
-            audio.pause();
-            somAtivo = true;
-            alert("Sinal sonoro ativado!");
-        }).catch(() => {
-            alert("Clique novamente para permitir o som.");
+let somAtivo = false;
+
+/* ===== DEBUG DE CONEXÃO ===== */
+socket.on("connect", () => {
+    console.log("✅ Socket conectado:", socket.id);
+});
+
+socket.on("disconnect", () => {
+    console.log("❌ Socket desconectado");
+});
+
+socket.on("connect_error", (err) => {
+    console.error("🔥 Erro socket:", err.message);
+});
+
+/* ===== SOM ===== */
+function ativarSom() {
+    const audio = document.getElementById("som");
+    audio.play().then(() => {
+        audio.pause();
+        somAtivo = true;
+        alert("🔊 Som ativado!");
+    }).catch(() => {
+        alert("Clique novamente para permitir o som.");
+    });
+}
+
+function tocarSom() {
+    if (!somAtivo) return;
+    const audio = document.getElementById("som");
+    audio.currentTime = 0;
+    audio.play().catch(()=>{});
+}
+
+/* ===== CARD ===== */
+function criarCard(p) {
+    if (document.getElementById("pedido-" + p.id)) return null;
+
+    let itensHtml = "";
+    p.itens.forEach(i => {
+        itensHtml += `<div class="item-linha">• ${i.nome} (${i.qtd}x)</div>`;
+    });
+
+    const div = document.createElement("div");
+    div.className = "card";
+    div.id = "pedido-" + p.id;
+
+    div.innerHTML = `
+        <div class="label">Cliente</div>
+        <div class="value">${p.cliente}</div>
+
+        <div class="label">Endereço</div>
+        <div class="value">${p.endereco}</div>
+
+        <div class="label">Itens</div>
+        <div class="itens-box">${itensHtml}</div>
+
+        <div class="actions">
+            <a class="btn btn-mapa" target="_blank"
+               href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco + " Aruanã GO")}">
+               🧭 Rota
+            </a>
+
+            <a class="btn btn-pegar" href="/pegar/${p.id}">
+               ✅ Confirmar
+            </a>
+        </div>
+    `;
+    return div;
+}
+
+/* ===== EVENTO PRINCIPAL ===== */
+socket.on("novo_pedido", (p) => {
+
+    console.log("📦 Pedido recebido:", p);
+
+    tocarSom();
+
+    if (Notification.permission === "granted") {
+        new Notification("🚚 Nova coleta", {
+            body: `${p.cliente}\n${p.endereco}`
         });
     }
 
-    function tocarSom() {
-        if (!somAtivo) return;
-        const audio = document.getElementById("som");
-        audio.currentTime = 0;
-        audio.play().catch(() => {});
-    }
+    // Atualização visual imediata
+    const lista = document.getElementById("lista");
+    const vazio = document.getElementById("vazio");
+    if (vazio) vazio.remove();
 
-    function criarCard(p) {
-        if (document.getElementById("pedido-" + p.id)) return null;
-        let itensHtml = "";
-        p.itens.forEach(i => {
-            itensHtml += `<div class="item-linha"><i class="fas fa-caret-right"></i> <span>${i.nome}</span> <span class="item-qtd">(${i.qtd}x)</span></div>`;
-        });
-        const div = document.createElement("div");
-        div.className = "card";
-        div.id = "pedido-" + p.id;
-        div.innerHTML = `
-            <div class="label"><i class="fas fa-user-tag"></i> Cliente</div>
-            <div class="value">${p.cliente}</div>
-            <div class="label"><i class="fas fa-map-marked-alt"></i> Local de Coleta</div>
-            <div class="value">${p.endereco}</div>
-            <div class="label"><i class="fas fa-tools"></i> Máquinas & Ferramentas</div>
-            <div class="itens-box">${itensHtml}</div>
-            <div class="actions">
-                <a class="btn btn-mapa" target="_blank" href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco + " Aruanã GO")}">
-                   <i class="fas fa-location-arrow"></i> Rota no Mapa
-                </a>
-                <a class="btn btn-pegar" href="/pegar/${p.id}">
-                   <i class="fas fa-check-circle"></i> Confirmar Coleta
-                </a>
-            </div>`;
-        return div;
-    }
+    const card = criarCard(p);
+    if (card) lista.prepend(card);
+});
 
-    socket.on("novo_pedido", function(p) {
-        const lista = document.getElementById("lista");
-        const vazio = document.getElementById("vazio");
-        if (vazio) vazio.remove();
-        const card = criarCard(p);
-        if (card) lista.prepend(card);
-        tocarSom();
-        if (Notification.permission === "granted") {
-            new Notification("Nova Coleta: " + p.cliente, { body: p.endereco });
-        }
-    });
+/* ===== REMOÇÃO QUANDO PEGO ===== */
+socket.on("pedido_atualizado", (data) => {
+    const el = document.getElementById("pedido-" + data.id);
+    if (el) el.remove();
+});
 
-    socket.on("pedido_atualizado", function(data) {
-        const el = document.getElementById("pedido-" + data.id);
-        if (el) {
-            el.style.opacity = "0";
-            el.style.transform = "scale(0.9)";
-            setTimeout(() => {
-                el.remove();
-                if (document.querySelectorAll(".card").length === 0) {
-                    document.getElementById("lista").innerHTML = '<div class="vazio" id="vazio"><i class="fas fa-box-open"></i><p>Nenhuma coleta pendente</p></div>';
-                }
-            }, 300);
-        }
-    });
-
-    if (Notification.permission !== "granted") Notification.requestPermission();
+/* ===== PERMISSÃO ===== */
+if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission();
+}
 </script>
+
 </body>
 </html>
+
 
 
 
