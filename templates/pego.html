@@ -88,7 +88,7 @@
 
         .control-panel { display: grid; grid-template-columns: 1fr auto; align-items: flex-end; gap: 24px; margin-bottom: 3rem; }
 
-        .filter-box { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); display: flex; gap: 25px; align-items: center; }
+        .filter-box { background: var(--bg-card); padding: 25px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); display: flex; gap: 25px; align-items: center; flex-wrap: wrap; }
 
         .input-wrapper label { font-size: 0.75rem; font-weight: 800; color: var(--brand-yellow); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; display: block; }
 
@@ -113,9 +113,25 @@
 
         .btn-premium:hover { transform: translateY(-3px); box-shadow: 0 10px 25px rgba(255, 204, 0, 0.3); }
 
+        .btn-clear {
+            background: transparent;
+            color: var(--brand-yellow);
+            border: 2px solid var(--brand-yellow);
+            padding: 12px 25px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-clear:hover {
+            background: var(--brand-yellow);
+            color: #000;
+        }
+
         .data-card { background: var(--bg-card); border-radius: var(--radius-xl); border: 1px solid var(--border-color); overflow: hidden; backdrop-filter: blur(10px); }
 
-        .card-header { padding: 25px 35px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .card-header { padding: 25px 35px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; }
         .card-header h2 { font-size: 1.3rem; font-weight: 800; color: var(--brand-yellow); text-transform: uppercase; }
 
         .stats-pill { background: rgba(255, 204, 0, 0.1); color: var(--brand-yellow); padding: 8px 20px; border-radius: 100px; font-size: 0.85rem; font-weight: 800; border: 1px solid var(--brand-yellow); }
@@ -137,6 +153,34 @@
         .timestamp i { color: var(--brand-orange); }
 
         .hidden-row { display: none; }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: var(--brand-yellow);
+            opacity: 0.3;
+            margin-bottom: 20px;
+        }
+
+        .empty-state h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            color: var(--text-primary);
+        }
+
+        @media (max-width: 768px) {
+            .control-panel { grid-template-columns: 1fr; }
+            .brand h1 { font-size: 0.9rem; }
+            header { padding: 1rem; }
+            .main-content { padding: 1.5rem 1rem; }
+            .card-header { padding: 20px; }
+            th, td { padding: 15px 12px; font-size: 0.8rem; }
+        }
 
         @media print {
             @page { size: A4 landscape; margin: 10mm; }
@@ -181,6 +225,9 @@
                 <label>Filtrar por Data</label>
                 <input type="date" id="dateFilter" onchange="applyFilter()">
             </div>
+            <button class="btn-clear" onclick="clearFilter()">
+                <i class="fas fa-times"></i> Limpar Filtro
+            </button>
         </div>
         <button class="btn-premium" onclick="window.print()">
             <i class="fas fa-print"></i> Imprimir Relatório
@@ -190,7 +237,7 @@
     <div class="data-card">
         <div class="card-header">
             <h2 id="displayTitle">Histórico de Operações</h2>
-            <span class="stats-pill" id="counterBadge">Total: {{pedidos|length}} Registros</span>
+            <span class="stats-pill" id="counterBadge">Total: 0 Registros</span>
         </div>
         
         <div class="table-wrapper">
@@ -205,26 +252,7 @@
                     </tr>
                 </thead>
                 <tbody id="tableBody">
-                    {% for p in pedidos %}
-                    <tr class="row-item" data-hora="{{p.hora}}">
-                        <td><span class="id-tag">#{{loop.index | string | zfill(3)}}</span></td>
-                        <td><span class="client-name">{{p.client}}</span></td>
-                        <td><span class="address-text">{{p.endereco}}</span></td>
-                        <td>
-                            <div class="tool-grid">
-                                {% for i in p.itens %}
-                                <span class="tool-chip">
-                                    <span class="qty">{{i.qtd}}x</span>
-                                    {{i.nome}}
-                                </span>
-                                {% endfor %}
-                            </div>
-                        </td>
-                        <td>
-                            <div class="timestamp"><i class="far fa-clock"></i> {{p.hora}}</div>
-                        </td>
-                    </tr>
-                    {% endfor %}
+                    <!-- Data will be loaded here by JavaScript -->
                 </tbody>
             </table>
         </div>
@@ -232,41 +260,169 @@
 </div>
 
 <script>
+    // Sample data - replace this with your actual data or API call
+    const pedidos = [
+        {
+            client: "João Silva",
+            endereco: "Rua das Flores, 123 - Centro, São José dos Campos",
+            itens: [
+                { qtd: 2, nome: "Furadeira Bosch" },
+                { qtd: 1, nome: "Betoneira 400L" }
+            ],
+            hora: "15/01/2025 14:30"
+        },
+        {
+            client: "Maria Oliveira",
+            endereco: "Av. Brasil, 456 - Jardim América, Taubaté",
+            itens: [
+                { qtd: 1, nome: "Compactador de Solo" },
+                { qtd: 3, nome: "Martelete" },
+                { qtd: 1, nome: "Gerador 5KVA" }
+            ],
+            hora: "15/01/2025 10:15"
+        },
+        {
+            client: "Carlos Mendes",
+            endereco: "Rua São Paulo, 789 - Vila Industrial, Jacareí",
+            itens: [
+                { qtd: 1, nome: "Andaime Completo" },
+                { qtd: 2, nome: "Serra Circular" }
+            ],
+            hora: "14/01/2025 16:45"
+        },
+        {
+            client: "Ana Costa",
+            endereco: "Av. Principal, 321 - Centro, Caçapava",
+            itens: [
+                { qtd: 1, nome: "Retroescavadeira" }
+            ],
+            hora: "14/01/2025 09:00"
+        },
+        {
+            client: "Pedro Santos",
+            endereco: "Rua dos Ipês, 555 - Parque das Árvores, Pindamonhangaba",
+            itens: [
+                { qtd: 5, nome: "Escora Metálica" },
+                { qtd: 2, nome: "Vibrador de Concreto" },
+                { qtd: 1, nome: "Placa Vibratória" }
+            ],
+            hora: "13/01/2025 11:20"
+        },
+        {
+            client: "Fernanda Lima",
+            endereco: "Av. das Indústrias, 999 - Distrito Industrial, Lorena",
+            itens: [
+                { qtd: 1, nome: "Guincho 500kg" },
+                { qtd: 2, nome: "Talha Manual" }
+            ],
+            hora: "12/01/2025 08:30"
+        }
+    ];
+
+    // Render the table
+    function renderTable(data) {
+        const tbody = document.getElementById('tableBody');
+        
+        if (data.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="5">
+                        <div class="empty-state">
+                            <i class="fas fa-inbox"></i>
+                            <h3>Nenhum registro encontrado</h3>
+                            <p>Não há coletas para a data selecionada.</p>
+                        </div>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = data.map((p, index) => {
+            const itensHtml = p.itens.map(i => `
+                <span class="tool-chip">
+                    <span class="qty">${i.qtd}x</span>
+                    ${i.nome}
+                </span>
+            `).join('');
+
+            return `
+                <tr class="row-item" data-hora="${p.hora}">
+                    <td><span class="id-tag">#${String(index + 1).padStart(3, '0')}</span></td>
+                    <td><span class="client-name">${p.client}</span></td>
+                    <td><span class="address-text">${p.endereco}</span></td>
+                    <td>
+                        <div class="tool-grid">
+                            ${itensHtml}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="timestamp"><i class="far fa-clock"></i> ${p.hora}</div>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+    }
+
+    // Clock function
     function startClock() {
         const update = () => {
             const now = new Date();
-            const timeStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false }).format(now);
+            const timeStr = new Intl.DateTimeFormat('pt-BR', { 
+                timeZone: 'America/Sao_Paulo', 
+                hour: '2-digit', 
+                minute: '2-digit', 
+                second: '2-digit', 
+                hour12: false 
+            }).format(now);
             document.getElementById('time-display').textContent = timeStr + " (SP)";
-            const dateStr = new Intl.DateTimeFormat('pt-BR', { timeZone: 'America/Sao_Paulo', dateStyle: 'full', timeStyle: 'short' }).format(now);
+            
+            const dateStr = new Intl.DateTimeFormat('pt-BR', { 
+                timeZone: 'America/Sao_Paulo', 
+                dateStyle: 'full', 
+                timeStyle: 'short' 
+            }).format(now);
             document.querySelectorAll('.current-date').forEach(el => el.textContent = dateStr);
         };
         setInterval(update, 1000);
         update();
     }
 
+    // Filter function
     function applyFilter() {
         const dateVal = document.getElementById("dateFilter").value;
-        const rows = document.querySelectorAll(".row-item");
         const title = document.getElementById("displayTitle");
         const badge = document.getElementById("counterBadge");
+        
         if (!dateVal) {
-            rows.forEach(r => r.classList.remove("hidden-row"));
+            renderTable(pedidos);
             title.innerText = "Histórico de Operações";
-            badge.innerText = `Total: ${rows.length} Registros`;
+            badge.innerText = `Total: ${pedidos.length} Registros`;
             return;
         }
+        
         const [y, m, d] = dateVal.split("-");
         const searchTag = `${d}/${m}/${y}`;
-        let count = 0;
-        rows.forEach(r => {
-            const rowTime = r.getAttribute("data-hora") || "";
-            if (rowTime.includes(searchTag)) { r.classList.remove("hidden-row"); count++; }
-            else { r.classList.add("hidden-row"); }
-        });
+        
+        const filteredData = pedidos.filter(p => p.hora.includes(searchTag));
+        
+        renderTable(filteredData);
         title.innerText = `Operações de ${searchTag}`;
-        badge.innerText = `Encontrados: ${count}`;
+        badge.innerText = `Encontrados: ${filteredData.length}`;
     }
-    window.onload = startClock;
+
+    // Clear filter
+    function clearFilter() {
+        document.getElementById("dateFilter").value = "";
+        applyFilter();
+    }
+
+    // Initialize
+    window.onload = function() {
+        startClock();
+        renderTable(pedidos);
+        document.getElementById("counterBadge").innerText = `Total: ${pedidos.length} Registros`;
+    };
 </script>
 
 </body>
