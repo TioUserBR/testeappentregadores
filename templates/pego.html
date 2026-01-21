@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Informações dos itens coletados | Sistema 6006</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root{
+  --brand-primary:#00dc82;
+  --brand-secondary:#00bbff;
+  --brand-gradient:linear-gradient(135deg,#00dc82,#00bbff);
+  --bg-deep:#0f172a;
+  --bg-surface:#1e293b;
+  --bg-card:rgba(30,41,59,.7);
+  --text-primary:#f8fafc;
+  --text-secondary:#94a3b8;
+  --border-color:rgba(255,255,255,.08);
+}
+
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Outfit',sans-serif}
+
+body{
+  background:var(--bg-deep);
+  color:var(--text-primary);
+  min-height:100vh;
+}
+
+/* HEADER */
+header{
+  background:rgba(15,23,42,.85);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border-color);
+  padding:16px 24px;
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+
+.header-container{
+  max-width:1400px;
+  margin:auto;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+
+.logo-section{
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.logo-section img{height:46px}
+
+.logo-text h1{
+  font-size:1rem;
+  background:var(--brand-gradient);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  text-transform:uppercase;
+}
+
+/* CLOCK */
+.sp-clock{
+  background:var(--bg-surface);
+  padding:6px 16px;
+  border-radius:50px;
+  border:1px solid var(--border-color);
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.status-dot{
+  width:8px;
+  height:8px;
+  background:var(--brand-primary);
+  border-radius:50%;
+  box-shadow:0 0 8px var(--brand-primary);
+}
+
+#time-display{
+  font-family:'JetBrains Mono',monospace;
+  color:var(--brand-primary);
+}
+
+/* CONTENT */
+.main-content{
+  max-width:1400px;
+  margin:auto;
+  padding:32px 20px;
+}
+
+.control-panel{
+  display:flex;
+  justify-content:space-between;
+  flex-wrap:wrap;
+  gap:16px;
+  margin-bottom:24px;
+}
+
+.filter-box{
+  background:var(--bg-card);
+  padding:16px;
+  border-radius:14px;
+  border:1px solid var(--border-color);
+  display:flex;
+  gap:16px;
+  align-items:center;
+}
+
+input[type=date]{
+  background:#0b1220;
+  border:1px solid var(--border-color);
+  color:white;
+  padding:8px 12px;
+  border-radius:8px;
+}
+
+.btn-premium{
+  background:var(--brand-gradient);
+  border:none;
+  padding:12px 22px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+/* TABLE */
+.data-card{
+  background:var(--bg-card);
+  border-radius:18px;
+  border:1px solid var(--border-color);
+  overflow:hidden;
+}
+
+.card-header{
+  padding:16px 22px;
+  border-bottom:1px solid var(--border-color);
+  display:flex;
+  justify-content:space-between;
+}
+
+.stats-pill{
+  background:rgba(0,220,130,.12);
+  padding:4px 12px;
+  border-radius:50px;
+  color:var(--brand-primary);
+  font-size:13px;
+}
+
+.table-wrapper{overflow-x:auto}
+
+table{width:100%;border-collapse:collapse}
+
+th{
+  padding:14px;
+  font-size:12px;
+  color:var(--text-secondary);
+  text-align:left;
+}
+
+td{
+  padding:14px;
+  border-top:1px solid var(--border-color);
+}
+
+.tool-chip{
+  display:inline-block;
+  margin:2px;
+  padding:3px 8px;
+  border-radius:6px;
+  background:rgba(255,255,255,.06);
+  font-size:12px;
+}
+
+.hidden-row{display:none}
+
+/* PRINT */
+@media print{
+  @page{size:A4 portrait;margin:10mm}
+
+  body{background:white;color:black}
+
+  header,.control-panel,.sp-clock{display:none!important}
+
+  .print-only{display:block!important;text-align:center;margin-bottom:20px}
+
+  .data-card{background:white;border:1px solid #ccc}
+
+  th,td{color:black;border:1px solid #ccc}
+
+  .tool-chip{border:1px solid #aaa;color:black}
+}
+
+.print-only{display:none}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-container">
+    <div class="logo-section">
+      <img src="https://i.ibb.co/nM4QKp12/6006.png">
+      <div class="logo-text"><h1>Itens Coletados</h1></div>
+    </div>
+    <div class="sp-clock">
+      <div class="status-dot"></div>
+      <span id="time-display">00:00:00</span>
+    </div>
+  </div>
+</header>
+
+<div class="main-content">
+
+<div class="print-only">
+  <img src="https://i.ibb.co/nM4QKp12/6006.png" height="60"><br>
+  <strong>Relatório de Itens Coletados</strong><br>
+  <span class="current-date"></span>
+</div>
+
+<div class="control-panel">
+  <div class="filter-box">
+    <label>Filtrar por data:</label>
+    <input type="date" id="dateFilter" onchange="applyFilter()">
+  </div>
+  <button class="btn-premium" onclick="window.print()"> Imprimir</button>
+</div>
+
+<div class="data-card">
+  <div class="card-header">
+    <span id="displayTitle">Histórico completo</span>
+    <span class="stats-pill" id="counterBadge">Total: {{ pedidos|length }}</span>
+  </div>
+
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Cliente</th>
+          <th>Endereço</th>
+          <th>Itens</th>
+          <th>Data/Hora</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+      {% for p in pedidos %}
+        <tr class="row-item" data-hora="{{p.hora}}">
+          <td>{{loop.index}}</td>
+          <td>{{p.cliente}}</td>
+          <td>{{p.endereco}}</td>
+          <td>
+            {% for i in p.itens %}
+              <span class="tool-chip">{{i.nome}} x{{i.qtd}}</span>
+            {% endfor %}
+          </td>
+          <td>{{p.hora}}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+</div>
+
+<script>
+function startClock(){
+  setInterval(()=>{
+    const now=new Date();
+    const time=now.toLocaleTimeString("pt-BR",{timeZone:"America/Sao_Paulo"});
+    document.getElementById("time-display").innerText=time;
+
+    const dateFull=now.toLocaleString("pt-BR",{timeZone:"America/Sao_Paulo"});
+    document.querySelectorAll(".current-date").forEach(e=>e.innerText=dateFull);
+  },1000);
+}
+
+function applyFilter(){
+  const val=document.getElementById("dateFilter").value;
+  const rows=document.querySelectorAll(".row-item");
+  let count=0;
+
+  if(!val){
+    rows.forEach(r=>r.classList.remove("hidden-row"));
+    document.getElementById("counterBadge").innerText="Total: "+rows.length;
+    return;
+  }
+
+  const [y,m,d]=val.split("-");
+  const key=`${d}/${m}/${y}`;
+
+  rows.forEach(r=>{
+    if(r.dataset.hora.includes(key)){
+      r.classList.remove("hidden-row");
+      count++;
+    }else{
+      r.classList.add("hidden-row");
+    }
+  });
+
+  document.getElementById("counterBadge").innerText="Encontrados: "+count;
+}
+
+startClock();
+</script>
+
+</body>
+</html>
