@@ -5,25 +5,133 @@
 <title>Entregador | Locadora do Vale</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 
 <style>
-/* === (seu CSS permanece igual, não mexi) === */
+:root{
+--yellow:#ffcc00;
+--orange:#ff6600;
+--bg:#0a0a0a;
+--card:#1a1a1a;
+--border:rgba(255,255,255,.1);
+}
+
+*{box-sizing:border-box;font-family:Outfit,sans-serif}
+
+body{
+margin:0;
+background:var(--bg);
+color:#fff;
+}
+
+header{
+padding:16px;
+text-align:center;
+border-bottom:2px solid var(--yellow);
+}
+
+.container{
+max-width:650px;
+margin:auto;
+padding:20px;
+}
+
+.btn-som{
+width:100%;
+padding:14px;
+margin-bottom:20px;
+background:transparent;
+border:1px solid var(--yellow);
+color:var(--yellow);
+border-radius:12px;
+font-weight:800;
+cursor:pointer;
+}
+
+.card{
+background:var(--card);
+border:1px solid var(--border);
+border-radius:18px;
+padding:20px;
+margin-bottom:20px;
+}
+
+.label{
+font-size:12px;
+color:var(--yellow);
+text-transform:uppercase;
+font-weight:800;
+margin-top:10px;
+}
+
+.value{
+font-size:16px;
+font-weight:600;
+margin-bottom:10px;
+}
+
+.itens-box{
+background:#111;
+border:1px solid var(--border);
+border-radius:12px;
+padding:10px;
+}
+
+.item-linha{
+color:#ccc;
+margin:4px 0;
+}
+
+.actions{
+margin-top:15px;
+display:grid;
+gap:10px;
+}
+
+.btn{
+padding:12px;
+border-radius:10px;
+text-decoration:none;
+font-weight:800;
+text-align:center;
+}
+
+.btn-mapa{
+border:1px solid var(--border);
+color:#fff;
+}
+
+.btn-pegar{
+background:linear-gradient(135deg,var(--yellow),var(--orange));
+color:#000;
+}
+
+.vazio{
+text-align:center;
+margin-top:80px;
+color:#777;
+}
+
+.vazio i{
+font-size:60px;
+color:var(--yellow);
+opacity:.3;
+}
 </style>
 </head>
 <body>
 
 <header>
-<h1><i class="fas fa-truck-loading"></i> Coletas Pendentes</h1>
+<h2><i class="fas fa-truck-loading"></i> Coletas Pendentes</h2>
 </header>
 
 <div class="container">
 
 <button class="btn-som" onclick="ativarSom()">
-<i class="fas fa-volume-up"></i> Ativar notificações sonoras
+🔊 Ativar notificações sonoras
 </button>
 
 <audio id="som" preload="auto">
@@ -34,6 +142,7 @@
 
 {% for p in pedidos %}
 <div class="card" id="pedido-{{p.id}}">
+
 <div class="label">Cliente</div>
 <div class="value">{{p.cliente}}</div>
 
@@ -49,14 +158,15 @@
 
 <div class="actions">
 <a class="btn btn-mapa" target="_blank"
-href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | urlencode }}+Aruan%C3%A3+GO}">
-🧭 Rota
+href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | urlencode }}+Aruan%C3%A3+GO">
+🧭 Rota no mapa
 </a>
 
 <a class="btn btn-pegar" href="/pegar/{{p.id}}">
 ✅ Confirmar coleta
 </a>
 </div>
+
 </div>
 {% else %}
 <div class="vazio" id="vazio">
@@ -72,128 +182,117 @@ href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | urlencode 
 /* ================= SOCKET ================= */
 
 const socket = io({
-  transports: ["websocket"],
-  upgrade: false,
-  reconnection: true,
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 1000,
-  timeout: 20000
+  transports:["websocket"],
+  upgrade:false,
+  reconnection:true,
+  reconnectionAttempts:Infinity,
+  reconnectionDelay:1000,
+  timeout:20000
 });
 
-socket.on("connect", () => {
-  console.log("✅ Conectado:", socket.id);
-});
-
-socket.on("disconnect", () => {
-  console.log("❌ Desconectado");
-});
-
-socket.on("connect_error", err => {
-  console.error("🔥 Erro socket:", err.message);
-});
+socket.on("connect",()=>console.log("✅ Socket conectado"));
+socket.on("disconnect",()=>console.log("❌ Socket desconectado"));
+socket.on("connect_error",e=>console.error("🔥 Socket erro:",e.message));
 
 /* ================= SOM ================= */
 
-let somAtivo = false;
+let somAtivo=false;
 
 function ativarSom(){
-  const audio = document.getElementById("som");
-  audio.play().then(()=>{
-    audio.pause();
-    somAtivo = true;
-    alert("🔊 Som ativado!");
-  }).catch(()=>{
-    alert("Clique novamente para permitir o som.");
-  });
+ const audio=document.getElementById("som");
+ audio.play().then(()=>{
+   audio.pause();
+   somAtivo=true;
+   alert("🔊 Som ativado!");
+ }).catch(()=>{
+   alert("Clique novamente para permitir o som.");
+ });
 }
 
 function tocarSom(){
-  if(!somAtivo) return;
-  const audio = document.getElementById("som");
-  audio.currentTime = 0;
-  audio.play().catch(()=>{});
+ if(!somAtivo) return;
+ const audio=document.getElementById("som");
+ audio.currentTime=0;
+ audio.play().catch(()=>{});
 }
 
 /* ================= CARDS ================= */
 
 function criarCard(p){
 
-  if(document.getElementById("pedido-"+p.id)) return;
+ if(document.getElementById("pedido-"+p.id)) return;
 
-  let itensHtml = "";
-  p.itens.forEach(i=>{
-    itensHtml += `<div class="item-linha">• ${i.nome} (${i.qtd}x)</div>`;
-  });
+ let itensHtml="";
+ p.itens.forEach(i=>{
+   itensHtml+=`<div class="item-linha">• ${i.nome} (${i.qtd}x)</div>`;
+ });
 
-  const div = document.createElement("div");
-  div.className = "card";
-  div.id = "pedido-"+p.id;
+ const div=document.createElement("div");
+ div.className="card";
+ div.id="pedido-"+p.id;
 
-  div.innerHTML = `
-    <div class="label">Cliente</div>
-    <div class="value">${p.cliente}</div>
+ div.innerHTML=`
+ <div class="label">Cliente</div>
+ <div class="value">${p.cliente}</div>
 
-    <div class="label">Endereço</div>
-    <div class="value">${p.endereco}</div>
+ <div class="label">Endereço</div>
+ <div class="value">${p.endereco}</div>
 
-    <div class="label">Itens</div>
-    <div class="itens-box">${itensHtml}</div>
+ <div class="label">Itens</div>
+ <div class="itens-box">${itensHtml}</div>
 
-    <div class="actions">
-      <a class="btn btn-mapa" target="_blank"
-         href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco+" Aruanã GO")}">
-         🧭 Rota
-      </a>
+ <div class="actions">
+   <a class="btn btn-mapa" target="_blank"
+   href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco+" Aruanã GO")}">
+   🧭 Rota no mapa</a>
 
-      <a class="btn btn-pegar" href="/pegar/${p.id}">
-         ✅ Confirmar coleta
-      </a>
-    </div>
-  `;
+   <a class="btn btn-pegar" href="/pegar/${p.id}">
+   ✅ Confirmar coleta</a>
+ </div>
+ `;
 
-  return div;
+ return div;
 }
 
 /* ================= EVENTOS ================= */
 
-socket.on("novo_pedido", p => {
+socket.on("novo_pedido",p=>{
 
-  console.log("📦 Novo pedido:", p);
+ console.log("📦 Novo pedido:",p);
 
-  tocarSom();
+ tocarSom();
 
-  if(Notification.permission === "granted"){
-    new Notification("🚚 Nova coleta disponível", {
-      body: `${p.cliente}\n${p.endereco}`
-    });
-  }
+ if(Notification.permission==="granted"){
+   new Notification("🚚 Nova coleta disponível",{
+     body:`${p.cliente}\n${p.endereco}`
+   });
+ }
 
-  const lista = document.getElementById("lista");
-  const vazio = document.getElementById("vazio");
-  if(vazio) vazio.remove();
+ const lista=document.getElementById("lista");
+ const vazio=document.getElementById("vazio");
+ if(vazio) vazio.remove();
 
-  const card = criarCard(p);
-  if(card) lista.prepend(card);
+ const card=criarCard(p);
+ if(card) lista.prepend(card);
 });
 
-socket.on("pedido_atualizado", data => {
-  const el = document.getElementById("pedido-"+data.id);
-  if(el) el.remove();
+socket.on("pedido_atualizado",data=>{
+ const el=document.getElementById("pedido-"+data.id);
+ if(el) el.remove();
 
-  if(document.querySelectorAll(".card").length === 0){
-    document.getElementById("lista").innerHTML = `
-      <div class="vazio" id="vazio">
-        <i class="fas fa-box-open"></i>
-        <p>Nenhuma coleta pendente</p>
-      </div>
-    `;
-  }
+ if(document.querySelectorAll(".card").length===0){
+   document.getElementById("lista").innerHTML=`
+   <div class="vazio" id="vazio">
+   <i class="fas fa-box-open"></i>
+   <p>Nenhuma coleta pendente</p>
+   </div>`;
+ }
 });
 
 /* ================= NOTIFICAÇÃO ================= */
 
-if("Notification" in window && Notification.permission !== "granted"){
-  Notification.requestPermission();
+if("Notification" in window && Notification.permission!=="granted"){
+ Notification.requestPermission();
 }
 </script>
 
