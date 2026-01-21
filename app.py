@@ -1,168 +1,139 @@
-# -*- coding: utf-8 -*-
-
 from flask import Flask, render_template, request, redirect, jsonify
 from flask_socketio import SocketIO
-import json
+import psycopg2
 import os
 import datetime
 
 app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False
+socketio = SocketIO(app, cors_allowed_origins="*")
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
-ARQ = "pedidos.json"
+# ------------------------
+# Banco
+# ------------------------
 
+def get_conn():
+    return psycopg2.connect(DATABASE_URL)
 
-# ======================
-# Utilidades
-# ======================
+def init_db():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS pedidos (
+            id BIGINT PRIMARY KEY,
+            cliente TEXT,
+            endereco TEXT,
+            ferramenta TEXT,
+            quantidade TEXT,
+            status TEXT,
+            hora TEXT
+        );
+    """)
+    conn.commit()
+    cur.close()
+    conn.close()
 
-def carregar():
-    if not os.path.exists(ARQ):
-        return []
-    try:
-        with open(ARQ, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, IOError):
-        return []
+def buscar_pedidos(status=None):
+    conn = get_conn()
+    cur = conn.cursor()
 
+    if status:
+        cur.execute("SELECT * FROM pedidos WHERE status=%s ORDER BY id DESC", (status,))
+    else:
+        cur.execute("SELECT * FROM pedidos ORDER BY id DESC")
 
-def salvar(dados):
-    try:
-        with open(ARQ, "w", encoding="utf-8") as f:
-            json.dump(dados, f, indent=2, ensure_ascii=False)
-    except IOError as e:
-        print("Erro ao salvar:", e)
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
 
+    pedidos = []
+    for r in rows:
+        pedidos.append({
+            "id": r[0],
+            "cliente": r[1],
+            "endereco": r[2],
+            "ferramenta": r[3],
+            "quantidade": r[4],
+            "status": r[5],
+            "hora": r[6],
+        })
+    return pedidos
 
-def agora_data():
-    return datetime.datetime.now().strftime("%d/%m/%Y")
-
-
-def agora_hora():
-    return datetime.datetime.now().strftime("%H:%M:%S")
-
-
-# ======================
-# Rotas principais
-# ======================
+# ------------------------
+# Rotas
+# ------------------------
 
 @app.route("/")
-def home():
-    return render_template("home.html")
-
-
-@app.route("/atendente")
 def atendente():
-    todos = carregar()
-    pendentes = [p for p in todos if p.get("status") == "pendente"]
-    return render_template("index.html", pedidos=pendentes)
-
-
-@app.route("/entregador")
-def entregador():
-    todos = carregar()
-    pendentes = [p for p in todos if p.get("status") == "pendente"]
-    return render_template("entregador.html", pedidos=pendentes)
-
-
-@app.route("/pego")
-def pegos():
-    todos = carregar()
-    pegos = [p for p in todos if p.get("status") == "pego"]
-    return render_template("pego.html", pedidos=pegos)
-
-
-# ======================
-# Ações
-# ======================
+    pedidos = buscar_pedidos("pendente")
+    return render_template("index.html", pedidos=pedidos)
 
 @app.route("/enviar", methods=["POST"])
 def enviar():
-    dados = carregar()
+    conn = get_conn()
+    cur = conn.cursor()
 
-    novo_pedido = {
-        "id": int(datetime.datetime.now().timestamp() * 1000),
-        "cliente": request.form.get("cliente", "").strip(),
-        "endereco": request.form.get("endereco", "").strip(),
-        "ferramenta": request.form.get("ferramenta", "").strip(),
-        "quantidade": request.form.get("quantidade", "1").strip(),
+    pid = int(datetime.datetime.now().timestamp() * 1000)
+
+    pedido = {
+        "id": pid,
+        "cliente": request.form.get("cliente"),
+        "endereco": request.form.get("endereco"),
+        "ferramenta": request.form.get("ferramenta"),
+        "quantidade": request.form.get("quantidade"),
         "status": "pendente",
-        "data": agora_data(),
-        "hora": agora_hora()
+        "hora": datetime.datetime.now().strftime("%d/%m/%Y %H:%M")
     }
 
-    dados.append(novo_pedido)
-    salvar(dados)
+    cur.execute("""
+        INSERT INTO pedidos VALUES (%s,%s,%s,%s,%s,%s,%s)
+    """, (
+        pedido["id"], pedido["cliente"], pedido["endereco"],
+        pedido["ferramenta"], pedido["quantidade"],
+        pedido["status"], pedido["hora"]
+    ))
 
-    socketio.emit("novo_pedido", novo_pedido)
+    conn.commit()
+    cur.close()
+    conn.close()
 
-    return redirect("/atendente")
+    socketio.emit("novo_pedido", pedido)
 
+    return redirect("/")
+
+@app.route("/entregador")
+def entregador():
+    pedidos = buscar_pedidos("pendente")
+    return render_template("entregador.html", pedidos=pedidos)
 
 @app.route("/pegar/<int:id>")
 def pegar(id):
-    dados = carregar()
+    conn = get_conn()
+    cur = conn.cursor()
 
-    for p in dados:
-        if p.get("id") == id and p.get("status") == "pendente":
-            p["status"] = "pego"
-            salvar(dados)
-            socketio.emit("pedido_atualizado", {"id": id, "status": "pego"})
-            break
+    cur.execute("UPDATE pedidos SET status='pego' WHERE id=%s", (id,))
+    conn.commit()
+
+    cur.close()
+    conn.close()
+
+    socketio.emit("pedido_atualizado", {"id": id, "status": "pego"})
 
     return redirect("/entregador")
 
-
-@app.route("/editar/<int:id>", methods=["POST"])
-def editar(id):
-    dados = carregar()
-    cliente = request.form.get("cliente", "").strip()
-    endereco = request.form.get("endereco", "").strip()
-
-    for p in dados:
-        if p.get("id") == id:
-            if cliente:
-                p["cliente"] = cliente
-            if endereco:
-                p["endereco"] = endereco
-
-            salvar(dados)
-            socketio.emit("pedido_atualizado", {
-                "id": id,
-                "cliente": cliente,
-                "endereco": endereco
-            })
-            return jsonify({"success": True})
-
-    return jsonify({"success": False}), 404
-
-
-@app.route("/apagar/<int:id>", methods=["POST"])
-def apagar(id):
-    dados = carregar()
-    novo = [p for p in dados if p.get("id") != id]
-
-    if len(novo) != len(dados):
-        salvar(novo)
-        socketio.emit("pedido_apagado", {"id": id})
-        return jsonify({"success": True})
-
-    return jsonify({"success": False}), 404
-
+@app.route("/pego")
+def pegos():
+    pedidos = buscar_pedidos("pego")
+    return render_template("pego.html", pedidos=pedidos)
 
 @app.route("/api/novos_pedidos")
 def novos_pedidos():
-    dados = carregar()
-    pendentes = [p for p in dados if p.get("status") == "pendente"]
-    return jsonify(pendentes)
+    pedidos = buscar_pedidos("pendente")
+    return jsonify(pedidos)
 
-
-# ======================
-# Inicialização
-# ======================
+# ------------------------
 
 if __name__ == "__main__":
-    # Local (PC / Android)
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    init_db()
+    socketio.run(app, host="0.0.0.0", port=5000)
