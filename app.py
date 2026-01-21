@@ -74,12 +74,32 @@ def carregar_pedidos(status):
     db.close()
     return pedidos
 
-# -------------------- ROTAS PRINCIPAIS --------------------
+# -------------------- HOME (DASHBOARD) --------------------
 
 @app.route("/")
 def home():
-    # Tela inicial com botões
-    return render_template("home.html")
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pendente'")
+    pendentes = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pego'")
+    pegos = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM pedidos")
+    total = c.fetchone()[0]
+
+    db.close()
+
+    return render_template(
+        "home.html",
+        pendentes=pendentes,
+        pegos=pegos,
+        total=total
+    )
+
+# -------------------- TELAS --------------------
 
 @app.route("/atendente")
 def atendente():
@@ -147,7 +167,9 @@ def enviar():
 def pegar(id):
     db = get_db()
     c = db.cursor()
+
     c.execute("UPDATE pedidos SET status='pego' WHERE id=%s", (id,))
+
     db.commit()
     db.close()
 
@@ -164,6 +186,7 @@ def editar(id):
 
     db = get_db()
     c = db.cursor()
+
     c.execute("""
         UPDATE pedidos SET cliente=%s, endereco=%s WHERE id=%s
     """, (cliente, endereco, id))
@@ -187,31 +210,7 @@ def apagar(id):
 
     return jsonify(success=True)
 
-@app.route("/")
-def home():
-    db = get_db()
-    c = db.cursor()
-
-    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pendente'")
-    pendentes = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pego'")
-    pegos = c.fetchone()[0]
-
-    c.execute("SELECT COUNT(*) FROM pedidos")
-    total = c.fetchone()[0]
-
-    db.close()
-
-    return render_template("home.html",
-        pendentes=pendentes,
-        pegos=pegos,
-        total=total
-    )
-
-
 # -------------------- MAIN --------------------
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
-
