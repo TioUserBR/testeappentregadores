@@ -1,510 +1,343 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Painel do Atendente | Coleta Pro Aruanã</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<title>Painel do Atendente | Coleta Pro Aruanã</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-  <style>
-    :root {
-      --primary: #4f46e5;
-      --primary-hover: #4338ca;
-      --bg: #f8fafc;
-      --card: #ffffff;
-      --text: #0f172a;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --radius: 16px;
-    }
+<style>
+:root{
+  --primary:#4f46e5;
+  --bg:#f8fafc;
+  --card:#fff;
+  --border:#e2e8f0;
+  --text:#0f172a;
+  --muted:#64748b;
+  --radius:14px;
+}
 
-    * { 
-      box-sizing: border-box; 
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-      font-family: 'Plus Jakarta Sans', sans-serif;
-    }
+*{box-sizing:border-box;font-family:Arial,system-ui}
 
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      background-image: radial-gradient(#cbd5e1 0.5px, transparent 0.5px);
-      background-size: 24px 24px;
-    }
+body{margin:0;background:var(--bg);color:var(--text)}
 
-    /* Cabeçalho Estilo Apple */
-    header {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-      padding: 12px 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      position: sticky;
-      top: 0;
-      z-index: 1000;
-    }
+header{
+  background:#fff;
+  padding:14px 24px;
+  border-bottom:1px solid var(--border);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
 
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+.container{
+  padding:20px;
+  max-width:1200px;
+  margin:auto;
+}
 
-    header img {
-      height: 42px;
-      width: auto;
-    }
+.grid{
+  display:grid;
+  grid-template-columns:380px 1fr;
+  gap:20px;
+}
 
-    header h1 {
-      font-size: 18px;
-      margin: 0;
-      font-weight: 700;
-      background: linear-gradient(90deg, var(--primary), #8b5cf6);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
+@media(max-width:900px){
+  .grid{grid-template-columns:1fr}
+}
 
-    .status-badge {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--primary);
-      background: #eef2ff;
-      padding: 6px 14px;
-      border-radius: 20px;
-      border: 1px solid #e0e7ff;
-    }
+.card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  padding:16px;
+}
 
-    .container {
-      padding: 24px;
-      max-width: 1250px;
-      margin: auto;
-    }
+label{
+  font-size:12px;
+  font-weight:bold;
+  color:var(--muted);
+  margin-top:10px;
+  display:block;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: 400px 1fr;
-      gap: 24px;
-    }
+input{
+  width:100%;
+  padding:10px;
+  border:1px solid var(--border);
+  border-radius:8px;
+  margin-top:4px;
+}
 
-    @media (max-width: 1050px) {
-      .grid { grid-template-columns: 1fr; }
-    }
+.row-inputs{
+  display:flex;
+  gap:8px;
+  align-items:center;
+  margin-top:6px;
+}
 
-    /* Cards */
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 24px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-    }
+button{
+  padding:10px 14px;
+  border:none;
+  border-radius:8px;
+  cursor:pointer;
+}
 
-    .card-title {
-      font-size: 16px;
-      font-weight: 700;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+.btn-main{
+  background:var(--primary);
+  color:#fff;
+  width:100%;
+  margin-top:12px;
+}
 
-    /* Formulário */
-    .form-group { margin-bottom: 18px; }
-    
-    label {
-      display: block;
-      font-size: 11px;
-      font-weight: 700;
-      margin-bottom: 6px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
+#btnBuscar{
+  background:#f1f5f9;
+  border:1px solid var(--border);
+}
 
-    input {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      font-size: 14px;
-      background: #fdfdfd;
-    }
+#mapa{
+  height:300px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  margin-top:10px;
+}
 
-    input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-      background: #fff;
-    }
+table{
+  width:100%;
+  border-collapse:collapse;
+}
 
-    .row-inputs { display: flex; gap: 12px; }
+th,td{
+  padding:8px;
+  border-bottom:1px solid var(--border);
+  font-size:14px;
+}
 
-    button {
-      padding: 12px 18px;
-      border-radius: 12px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      border: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
+.badge{
+  background:#eef2ff;
+  padding:4px 8px;
+  border-radius:6px;
+  font-size:12px;
+}
 
-    .btn-main {
-      background: var(--primary);
-      color: #fff;
-      width: 100%;
-      margin-top: 10px;
-      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
-    }
+.action-btn{
+  border:1px solid var(--border);
+  background:#fff;
+  padding:6px 8px;
+  border-radius:6px;
+  cursor:pointer;
+}
 
-    .btn-main:hover {
-      background: var(--primary-hover);
-      transform: translateY(-1px);
-    }
+.modal{
+  display:none;
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.4);
+}
 
-    #btnBuscar {
-      background: #f1f5f9;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    /* Mapa */
-    #mapa {
-      height: 380px;
-      border-radius: 14px;
-      border: 1px solid var(--border);
-      margin-top: 15px;
-      z-index: 1;
-    }
-
-    /* Tabela de Pedidos */
-    .table-wrapper { overflow-x: auto; }
-
-    table {
-      width: 100%;
-      border-collapse: separate;
-      border-spacing: 0 10px;
-    }
-
-    th {
-      padding: 12px;
-      text-align: left;
-      font-size: 11px;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    td {
-      padding: 16px;
-      background: #fff;
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-    }
-
-    td:first-child { border-left: 1px solid var(--border); border-radius: 14px 0 0 14px; }
-    td:last-child { border-right: 1px solid var(--border); border-radius: 0 14px 14px 0; }
-
-    .badge-item {
-      background: #f1f5f9;
-      color: var(--text);
-      padding: 4px 10px;
-      border-radius: 8px;
-      font-size: 12px;
-      font-weight: 600;
-      border: 1px solid var(--border);
-    }
-
-    .action-btn {
-      padding: 8px;
-      border-radius: 10px;
-      background: #fff;
-      border: 1px solid var(--border);
-      cursor: pointer;
-    }
-
-    .action-btn.edit:hover { color: #d97706; border-color: #fbbf24; background: #fffbeb; }
-    .action-btn.delete:hover { color: #dc2626; border-color: #f87171; background: #fef2f2; }
-
-    /* Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      z-index: 2000;
-      left: 0; top: 0; width: 100%; height: 100%;
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(8px);
-    }
-
-    .modal-content {
-      background: white;
-      margin: 8% auto;
-      padding: 32px;
-      border-radius: 24px;
-      max-width: 480px;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
-    }
-  </style>
+.modal-content{
+  background:#fff;
+  max-width:420px;
+  margin:10% auto;
+  padding:16px;
+  border-radius:12px;
+}
+</style>
 </head>
+
 <body>
 
 <header>
-  <div class="header-brand">
-    <img src="https://i.ibb.co/8L1Rskqs/5863b71c-151c-47a4-b158-1350d3a20b14.png" alt="Logo Empresa">
-    <h1>Coleta Pro Aruanã</h1>
-  </div>
-  <div class="status-badge">📍 Aruanã, GO - Rio Vermelho</div>
+  <strong>Coleta Pro Aruanã</strong>
+  <span>📍 Aruanã - GO</span>
 </header>
 
 <div class="container">
-  <div class="grid">
-    
-    <div class="card">
-      <div class="card-title">✨ Novo Pedido de Coleta</div>
-      <form action="/enviar" method="post">
-        <div class="form-group">
-          <label>Cliente</label>
-          <input name="cliente" placeholder="Nome completo do cliente" required>
-        </div>
+<div class="grid">
 
-        <div class="row-inputs">
-          <div class="form-group" style="flex: 2;">
-            <label>Ferramenta / Item</label>
-            <input name="ferramenta" placeholder="Ex: Betoneira" required>
-          </div>
-          <div class="form-group" style="flex: 1;">
-            <label>Qtd</label>
-            <input name="quantidade" type="number" value="1" min="1" required>
-          </div>
-        </div>
+<!-- FORMULÁRIO -->
+<div class="card">
+<h3>Novo pedido</h3>
 
-        <div class="form-group">
-          <label>Endereço em Aruanã (Rua e Bairro)</label>
-          <div class="row-inputs">
-            <input id="enderecoFinal" name="endereco" placeholder="Digite o local..." required autocomplete="off">
-            <button type="button" id="btnBuscar">📍</button>
-          </div>
-        </div>
+<form action="/enviar" method="post">
 
-        <div id="mapa"></div>
+<label>Cliente</label>
+<input name="cliente" required>
 
-        <button type="submit" class="btn-main">Registrar Pedido</button>
-      </form>
-    </div>
+<label>Ferramentas</label>
 
-    <div class="card">
-      <div class="card-title">🕒 Pedidos Pendentes na Região</div>
-      <div class="table-wrapper">
-        <table id="tabela-pedidos">
-          <thead>
-            <tr>
-              <th>Cliente</th>
-              <th>Endereço Local</th>
-              <th>Detalhes</th>
-              <th style="text-align: right;">Gestão</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for p in pedidos %}
-            <tr data-id="{{ p.id }}">
-              <td><strong>{{ p.cliente }}</strong></td>
-              <td style="font-size: 13px; color: var(--muted);">{{ p.endereco }}</td>
-              <td><span class="badge-item">{{ p.quantidade }}x {{ p.ferramenta }}</span></td>
-              <td>
-                <div style="display: flex; gap: 8px; justify-content: flex-end;">
-                  <button class="action-btn edit" title="Editar" onclick="abrirModalEditar({{ p.id }}, '{{ p.cliente | e }}', '{{ p.endereco | e }}')">✏️</button>
-                  <button class="action-btn delete" title="Apagar" onclick="apagarPedido({{ p.id }})">🗑️</button>
-                </div>
-              </td>
-            </tr>
-            {% else %}
-            <tr>
-              <td colspan="4" style="text-align: center; color: var(--muted); padding: 80px;">
-                <div style="font-size: 40px; margin-bottom: 10px;">☕</div>
-                Nenhum pedido de coleta pendente para Aruanã.
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
+<div id="lista-ferramentas">
+  <div class="row-inputs ferramenta-item">
+    <input name="ferramenta[]" placeholder="Ferramenta" required>
+    <input name="quantidade[]" type="number" value="1" min="1" style="width:70px" required>
+    <button type="button" onclick="removerFerramenta(this)">❌</button>
   </div>
 </div>
 
+<button type="button" onclick="adicionarFerramenta()">➕ Adicionar ferramenta</button>
+
+<label>Endereço</label>
+<div class="row-inputs">
+  <input id="enderecoFinal" name="endereco" required>
+  <button type="button" id="btnBuscar">📍</button>
+</div>
+
+<div id="mapa"></div>
+
+<button class="btn-main">Registrar pedido</button>
+
+</form>
+</div>
+
+<!-- TABELA -->
+<div class="card">
+<h3>Pedidos pendentes</h3>
+
+<table>
+<thead>
+<tr>
+<th>Cliente</th>
+<th>Endereço</th>
+<th>Itens</th>
+<th>Ações</th>
+</tr>
+</thead>
+<tbody>
+
+{% for p in pedidos %}
+<tr data-id="{{p.id}}">
+<td>{{p.cliente}}</td>
+<td>{{p.endereco}}</td>
+<td>
+{% for i in p.itens %}
+<span class="badge">{{i.nome}} ({{i.qtd}}x)</span><br>
+{% endfor %}
+</td>
+<td>
+<button class="action-btn" onclick="abrirModalEditar({{p.id}}, {{p.cliente|tojson}}, {{p.endereco|tojson}})">✏</button>
+<button class="action-btn" onclick="apagarPedido({{p.id}})">🗑</button>
+</td>
+</tr>
+{% else %}
+<tr><td colspan="4" style="text-align:center;color:#888">Nenhum pedido</td></tr>
+{% endfor %}
+
+</tbody>
+</table>
+</div>
+
+</div>
+</div>
+
+<!-- MODAL -->
 <div id="modalEditar" class="modal">
-  <div class="modal-content">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <h2 style="margin: 0; font-size: 18px;">Atualizar Registro</h2>
-      <span style="cursor: pointer; font-size: 24px; color: var(--muted);" onclick="fecharModal()">&times;</span>
-    </div>
-    <form id="formEditar">
-      <input type="hidden" id="editId">
-      <div class="form-group">
-        <label>Nome do Cliente</label>
-        <input type="text" id="editCliente" required>
-      </div>
-      <div class="form-group">
-        <label>Endereço de Coleta</label>
-        <input type="text" id="editEndereco" required>
-      </div>
-      <div style="display: flex; gap: 12px; margin-top: 30px;">
-        <button type="button" onclick="fecharModal()" style="flex: 1; background: #f1f5f9;">Voltar</button>
-        <button type="submit" class="btn-main" style="flex: 2; margin-top: 0;">Salvar Alterações</button>
-      </div>
-    </form>
-  </div>
+<div class="modal-content">
+<h3>Editar pedido</h3>
+
+<form id="formEditar">
+<input type="hidden" id="editId">
+
+<label>Cliente</label>
+<input id="editCliente">
+
+<label>Endereço</label>
+<input id="editEndereco">
+
+<div class="row-inputs" style="margin-top:10px">
+<button type="button" onclick="fecharModal()">Cancelar</button>
+<button class="btn-main">Salvar</button>
+</div>
+</form>
+</div>
 </div>
 
 <script>
-// --- LÓGICA DO MAPA (FOCO EM ARUANÃ-GO) ---
+/* ===== MULTI FERRAMENTAS ===== */
 
-// Coordenadas Centrais (Região Urbana de Aruanã)
-const centroAruana = [-14.9215, -51.0260];
-
-// Camada de Ruas (OpenStreetMap)
-const layerRuas = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '© OpenStreetMap'
-});
-
-// Camada de Satélite (Esri World Imagery)
-const layerSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-  attribution: 'Tiles &copy; Esri'
-});
-
-// Inicialização com limites geográficos restritos à microrregião fornecida
-const mapa = L.map('mapa', {
-  center: centroAruana,
-  zoom: 16,
-  minZoom: 13,
-  maxBounds: [
-    [-15.3200, -51.1700], // Sudoeste (Microrregião)
-    [-14.1000, -50.7300]  // Nordeste (Microrregião)
-  ],
-  maxBoundsViscosity: 1.0,
-  layers: [layerRuas]
-});
-
-// Seletor de Camadas (Canto Superior Direito)
-L.control.layers({
-  "Mapa de Ruas": layerRuas,
-  "Vista de Satélite": layerSatelite
-}).addTo(mapa);
-
-let marcador = null;
-
-// Função para limpar e formatar o endereço (mostra apenas Rua e Bairro)
-function formatarEnderecoExibicao(fullText) {
-  if (!fullText) return "";
-  // Corta o texto antes de chegar em "Aruanã", removendo cidade, estado e CEP
-  let formatado = fullText.split(', Aruanã')[0].split(', 76710')[0].trim();
-  return formatado;
+function adicionarFerramenta(){
+  const div=document.createElement("div");
+  div.className="row-inputs ferramenta-item";
+  div.innerHTML=`
+    <input name="ferramenta[]" placeholder="Ferramenta" required>
+    <input name="quantidade[]" type="number" value="1" min="1" style="width:70px" required>
+    <button type="button" onclick="removerFerramenta(this)">❌</button>
+  `;
+  document.getElementById("lista-ferramentas").appendChild(div);
 }
 
-function adicionarMarcador(lat, lng, atualizarTexto = true) {
-  if (marcador) mapa.removeLayer(marcador);
-  marcador = L.marker([lat, lng]).addTo(mapa);
-  
-  if (atualizarTexto) {
-    fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
-      .then(r => r.json())
-      .then(dados => {
-        const local = formatarEnderecoExibicao(dados.display_name);
-        document.getElementById("enderecoFinal").value = local || `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
-      });
-  }
+function removerFerramenta(btn){
+  btn.parentElement.remove();
 }
 
-// Clique no mapa para definir local
-mapa.on('click', e => adicionarMarcador(e.latlng.lat, e.latlng.lng));
+/* ===== MAPA ===== */
 
-// Função de Busca de Endereço
-document.getElementById("btnBuscar").onclick = function() {
-  const query = document.getElementById("enderecoFinal").value;
-  if (!query) return;
+const centro=[-14.9215,-51.0260];
+const mapa=L.map("mapa").setView(centro,16);
 
-  fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query + ', Aruanã, Goiás')}&limit=1`)
-    .then(r => r.json())
-    .then(res => {
-      if (res.length > 0) {
-        const { lat, lon, display_name } = res[0];
-        // Verifica se o resultado está dentro de Aruanã
-        if (display_name.includes("Aruanã")) {
-          mapa.setView([lat, lon], 17);
-          adicionarMarcador(lat, lon, false);
-          document.getElementById("enderecoFinal").value = formatarEnderecoExibicao(display_name);
-        } else {
-          alert("Endereço localizado fora de Aruanã. Tente novamente.");
-        }
-      } else {
-        alert("Local não encontrado em Aruanã.");
-      }
-    });
-};
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapa);
 
-// --- FUNÇÕES DE INTERFACE E API ---
+let marcador=null;
 
-function abrirModalEditar(id, cliente, endereco) {
-  document.getElementById("editId").value = id;
-  document.getElementById("editCliente").value = cliente;
-  document.getElementById("editEndereco").value = endereco;
-  document.getElementById("modalEditar").style.display = "block";
+function adicionarMarcador(lat,lng){
+  if(marcador) mapa.removeLayer(marcador);
+  marcador=L.marker([lat,lng]).addTo(mapa);
+
+  fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`)
+  .then(r=>r.json())
+  .then(d=>{
+    let txt=d.display_name.split(", Aruanã")[0];
+    document.getElementById("enderecoFinal").value=txt;
+  });
 }
 
-function fecharModal() {
-  document.getElementById("modalEditar").style.display = "none";
-}
+mapa.on("click",e=>adicionarMarcador(e.latlng.lat,e.latlng.lng));
 
-// Salvar Edição
-document.getElementById("formEditar").onsubmit = function(e) {
-  e.preventDefault();
-  const id = document.getElementById("editId").value;
-  const cliente = document.getElementById("editCliente").value;
-  const endereco = document.getElementById("editEndereco").value;
+document.getElementById("btnBuscar").onclick=function(){
+  const q=enderecoFinal.value;
+  if(!q) return;
 
-  fetch(`/editar/${id}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({ cliente, endereco })
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.success) {
-      location.reload();
-    } else {
-      alert("Erro ao salvar alterações.");
-    }
+  fetch(`https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q+", Aruanã GO")}`)
+  .then(r=>r.json())
+  .then(res=>{
+    if(res.length){
+      mapa.setView([res[0].lat,res[0].lon],17);
+      adicionarMarcador(res[0].lat,res[0].lon);
+    }else alert("Endereço não encontrado em Aruanã");
   });
 };
 
-// Apagar Registro
-function apagarPedido(id) {
-  if (confirm("Deseja realmente excluir esta coleta de Aruanã?")) {
-    fetch(`/apagar/${id}`, { method: 'POST' })
-      .then(r => r.json())
-      .then(data => {
-        if (data.success) {
-          const row = document.querySelector(`tr[data-id="${id}"]`);
-          if (row) row.remove();
-        }
-      });
-  }
+/* ===== CRUD ===== */
+
+function abrirModalEditar(id,cliente,endereco){
+  editId.value=id;
+  editCliente.value=cliente;
+  editEndereco.value=endereco;
+  modalEditar.style.display="block";
 }
 
-// Fechar modal ao clicar fora dele
-window.onclick = function(event) {
-  const modal = document.getElementById("modalEditar");
-  if (event.target == modal) fecharModal();
+function fecharModal(){
+  modalEditar.style.display="none";
+}
+
+formEditar.onsubmit=function(e){
+  e.preventDefault();
+
+  fetch(`/editar/${editId.value}`,{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:new URLSearchParams({
+      cliente:editCliente.value,
+      endereco:editEndereco.value
+    })
+  }).then(()=>location.reload());
+};
+
+function apagarPedido(id){
+  if(!confirm("Apagar pedido?")) return;
+  fetch(`/apagar/${id}`,{method:"POST"})
+  .then(()=>document.querySelector(`tr[data-id="${id}"]`).remove());
 }
 </script>
 
