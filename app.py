@@ -187,7 +187,31 @@ def apagar(id):
 
     return jsonify(success=True)
 
+@app.route("/")
+def home():
+    db = get_db()
+    c = db.cursor()
+
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pendente'")
+    pendentes = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM pedidos WHERE status='pego'")
+    pegos = c.fetchone()[0]
+
+    c.execute("SELECT COUNT(*) FROM pedidos")
+    total = c.fetchone()[0]
+
+    db.close()
+
+    return render_template("home.html",
+        pendentes=pendentes,
+        pegos=pegos,
+        total=total
+    )
+
+
 # -------------------- MAIN --------------------
 
 if __name__ == "__main__":
     socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+
