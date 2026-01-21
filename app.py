@@ -1,3 +1,6 @@
+import eventlet
+eventlet.monkey_patch()
+
 import os
 from flask import Flask, render_template, request, redirect, jsonify
 from flask_socketio import SocketIO
@@ -11,14 +14,24 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 app = Flask(__name__)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="threading")
+
+# SocketIO correto para produção
+socketio = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    async_mode="eventlet"
+)
 
 # -------------------- DB --------------------
 
 def get_db():
     if not DATABASE_URL:
         raise Exception("DATABASE_URL não configurada")
-    return psycopg2.connect(DATABASE_URL, sslmode="require", connect_timeout=5)
+    return psycopg2.connect(
+        DATABASE_URL,
+        sslmode="require",
+        connect_timeout=5
+    )
 
 def init_db():
     db = get_db()
@@ -92,7 +105,12 @@ def home():
 
     db.close()
 
-    return render_template("home.html", pendentes=pendentes, pegos=pegos, total=total)
+    return render_template(
+        "home.html",
+        pendentes=pendentes,
+        pegos=pegos,
+        total=total
+    )
 
 # -------------------- TELAS --------------------
 
@@ -142,11 +160,15 @@ def enviar():
                 VALUES (%s,%s,%s)
             """, (pedido_id, nome, int(qtd)))
 
-            itens_socket.append({"nome": nome, "qtd": int(qtd)})
+            itens_socket.append({
+                "nome": nome,
+                "qtd": int(qtd)
+            })
 
     db.commit()
     db.close()
 
+    # Envia em tempo real
     socketio.emit("novo_pedido", {
         "id": pedido_id,
         "cliente": cliente,
@@ -206,4 +228,5 @@ def apagar(id):
 # -------------------- MAIN --------------------
 
 if __name__ == "__main__":
-    socketio.run(app, host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host="0.0.0.0", port=port)
