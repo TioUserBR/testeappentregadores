@@ -10,13 +10,15 @@
 
 <style>
 :root{
-  --primary:#4f46e5;
-  --bg:#f8fafc;
-  --card:#fff;
-  --border:#e2e8f0;
-  --text:#0f172a;
-  --muted:#64748b;
-  --radius:14px;
+  --brand-yellow:#ffcc00;
+  --brand-orange:#ff6600;
+  --brand-gradient:linear-gradient(135deg,#ffcc00 0%,#ff6600 100%);
+  --bg:#0a0a0a;
+  --card:#1a1a1a;
+  --border:rgba(255,255,255,.1);
+  --text:#ffffff;
+  --muted:#a0a0a0;
+  --radius:16px;
 }
 
 *{box-sizing:border-box;font-family:Arial,system-ui}
@@ -24,29 +26,19 @@
 body{margin:0;background:var(--bg);color:var(--text)}
 
 header{
-  background:#fff;
+  background:#0f0f0f;
   padding:14px 24px;
-  border-bottom:1px solid var(--border);
+  border-bottom:2px solid var(--brand-yellow);
   display:flex;
   justify-content:space-between;
   align-items:center;
 }
 
-.container{
-  padding:20px;
-  max-width:1200px;
-  margin:auto;
-}
+.container{padding:20px;max-width:1200px;margin:auto}
 
-.grid{
-  display:grid;
-  grid-template-columns:380px 1fr;
-  gap:20px;
-}
+.grid{display:grid;grid-template-columns:380px 1fr;gap:20px}
 
-@media(max-width:900px){
-  .grid{grid-template-columns:1fr}
-}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
 
 .card{
   background:var(--card);
@@ -55,12 +47,15 @@ header{
   padding:16px;
 }
 
+h3{color:var(--brand-yellow)}
+
 label{
   font-size:12px;
   font-weight:bold;
-  color:var(--muted);
+  color:var(--brand-yellow);
   margin-top:10px;
   display:block;
+  text-transform:uppercase;
 }
 
 input{
@@ -69,32 +64,31 @@ input{
   border:1px solid var(--border);
   border-radius:8px;
   margin-top:4px;
+  background:#000;
+  color:#fff;
 }
 
-.row-inputs{
-  display:flex;
-  gap:8px;
-  align-items:center;
-  margin-top:6px;
-}
+.row-inputs{display:flex;gap:8px;align-items:center;margin-top:6px}
 
 button{
   padding:10px 14px;
   border:none;
   border-radius:8px;
   cursor:pointer;
+  font-weight:bold;
 }
 
 .btn-main{
-  background:var(--primary);
-  color:#fff;
+  background:var(--brand-gradient);
+  color:#000;
   width:100%;
   margin-top:12px;
 }
 
 #btnBuscar{
-  background:#f1f5f9;
+  background:#111;
   border:1px solid var(--border);
+  color:#fff;
 }
 
 #mapa{
@@ -104,10 +98,9 @@ button{
   margin-top:10px;
 }
 
-table{
-  width:100%;
-  border-collapse:collapse;
-}
+table{width:100%;border-collapse:collapse}
+
+th{color:var(--brand-yellow);font-size:12px;text-transform:uppercase}
 
 th,td{
   padding:8px;
@@ -116,33 +109,43 @@ th,td{
 }
 
 .badge{
-  background:#eef2ff;
+  background:rgba(255,204,0,.15);
+  color:var(--brand-yellow);
   padding:4px 8px;
   border-radius:6px;
   font-size:12px;
+  display:inline-block;
+  margin-bottom:4px;
 }
 
 .action-btn{
   border:1px solid var(--border);
-  background:#fff;
+  background:#111;
   padding:6px 8px;
   border-radius:6px;
   cursor:pointer;
+  color:#fff;
+}
+
+.action-btn:hover{
+  border-color:var(--brand-yellow);
+  color:var(--brand-yellow);
 }
 
 .modal{
   display:none;
   position:fixed;
   inset:0;
-  background:rgba(0,0,0,.4);
+  background:rgba(0,0,0,.7);
 }
 
 .modal-content{
-  background:#fff;
+  background:#111;
   max-width:420px;
   margin:10% auto;
   padding:16px;
   border-radius:12px;
+  border:1px solid var(--border);
 }
 </style>
 </head>
@@ -150,14 +153,13 @@ th,td{
 <body>
 
 <header>
-  <strong>Coleta Pro Aruanã</strong>
-  <span>📍 Aruanã - GO</span>
+  <strong style="color:var(--brand-yellow)">Coleta Pro Aruanã</strong>
+  <span style="color:var(--muted)">📍 Aruanã - GO</span>
 </header>
 
 <div class="container">
 <div class="grid">
 
-<!-- FORMULÁRIO -->
 <div class="card">
 <h3>Novo pedido</h3>
 
@@ -191,7 +193,6 @@ th,td{
 </form>
 </div>
 
-<!-- TABELA -->
 <div class="card">
 <h3>Pedidos pendentes</h3>
 
@@ -221,7 +222,7 @@ th,td{
 </td>
 </tr>
 {% else %}
-<tr><td colspan="4" style="text-align:center;color:#888">Nenhum pedido</td></tr>
+<tr><td colspan="4" style="text-align:center;color:#777">Nenhum pedido</td></tr>
 {% endfor %}
 
 </tbody>
@@ -231,7 +232,6 @@ th,td{
 </div>
 </div>
 
-<!-- MODAL -->
 <div id="modalEditar" class="modal">
 <div class="modal-content">
 <h3>Editar pedido</h3>
@@ -254,8 +254,6 @@ th,td{
 </div>
 
 <script>
-/* ===== MULTI FERRAMENTAS ===== */
-
 function adicionarFerramenta(){
   const div=document.createElement("div");
   div.className="row-inputs ferramenta-item";
@@ -267,15 +265,10 @@ function adicionarFerramenta(){
   document.getElementById("lista-ferramentas").appendChild(div);
 }
 
-function removerFerramenta(btn){
-  btn.parentElement.remove();
-}
-
-/* ===== MAPA ===== */
+function removerFerramenta(btn){btn.parentElement.remove();}
 
 const centro=[-14.9215,-51.0260];
 const mapa=L.map("mapa").setView(centro,16);
-
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(mapa);
 
 let marcador=null;
@@ -294,7 +287,7 @@ function adicionarMarcador(lat,lng){
 
 mapa.on("click",e=>adicionarMarcador(e.latlng.lat,e.latlng.lng));
 
-document.getElementById("btnBuscar").onclick=function(){
+btnBuscar.onclick=function(){
   const q=enderecoFinal.value;
   if(!q) return;
 
@@ -304,11 +297,9 @@ document.getElementById("btnBuscar").onclick=function(){
     if(res.length){
       mapa.setView([res[0].lat,res[0].lon],17);
       adicionarMarcador(res[0].lat,res[0].lon);
-    }else alert("Endereço não encontrado em Aruanã");
+    }else alert("Endereço não encontrado");
   });
 };
-
-/* ===== CRUD ===== */
 
 function abrirModalEditar(id,cliente,endereco){
   editId.value=id;
@@ -317,20 +308,14 @@ function abrirModalEditar(id,cliente,endereco){
   modalEditar.style.display="block";
 }
 
-function fecharModal(){
-  modalEditar.style.display="none";
-}
+function fecharModal(){modalEditar.style.display="none";}
 
 formEditar.onsubmit=function(e){
   e.preventDefault();
-
   fetch(`/editar/${editId.value}`,{
     method:"POST",
     headers:{"Content-Type":"application/x-www-form-urlencoded"},
-    body:new URLSearchParams({
-      cliente:editCliente.value,
-      endereco:editEndereco.value
-    })
+    body:new URLSearchParams({cliente:editCliente.value,endereco:editEndereco.value})
   }).then(()=>location.reload());
 };
 
