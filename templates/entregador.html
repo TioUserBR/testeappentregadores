@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Entregador | Sistema de Coleta</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --primary: #2563eb;
+  --success: #16a34a;
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --text: #0f172a;
+  --muted: #64748b;
+  --radius: 18px;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+body {
+  margin: 0;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  padding-bottom: 40px;
+}
+
+header {
+  background: #ffffff;
+  padding: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+header img {
+  height: 35px;
+  width: auto;
+}
+
+header h1 {
+  font-size: 16px;
+  margin: 0;
+  font-weight: 700;
+  color: var(--primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.container { padding: 16px; }
+
+.btn-som {
+  background: #fff;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: calc(100% - 32px);
+  margin: 10px 16px;
+  padding: 10px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+}
+
+.card {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.03);
+  animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.info-grid {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.value {
+  font-size: 15px;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+.address-box {
+  background: #f1f5f9;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.btn {
+  padding: 15px;
+  border: none;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.btn-mapa {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.btn-pegar {
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.vazio {
+  margin-top: 80px;
+  text-align: center;
+  color: var(--muted);
+}
+
+.vazio-icon { font-size: 50px; display: block; margin-bottom: 10px; }
+
+/* Badge de quantidade */
+.qty-badge {
+  background: var(--primary);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  margin-left: 5px;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <img src="https://i.ibb.co/8L1Rskqs/5863b71c-151c-47a4-b158-1350d3a20b14.png" alt="Logo">
+  <h1>Entregas</h1>
+</header>
+
+<button class="btn-som" onclick="ativarSom()">
+  <span id="som-icon">🔊</span> Ativar Som de Notificação
+</button>
+
+<audio id="som">
+  <source src="/static/notificacao.mp3" type="audio/mpeg">
+</audio>
+
+<div class="container" id="lista">
+
+{% for p in pedidos %}
+<div class="card" id="pedido-{{p.id}}">
+  <div class="info-grid">
+    <div class="info-item">
+      <span class="label">Cliente</span>
+      <span class="value">{{p.cliente}}</span>
+    </div>
+    <div class="info-item">
+      <span class="label">Endereço de Coleta</span>
+      <div class="address-box">📍 {{p.endereco}}</div>
+    </div>
+    <div class="info-item">
+      <span class="label">Item para recolher</span>
+      <span class="value">{{p.ferramenta}} <span class="qty-badge">{{p.quantidade}} un</span></span>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | replace(' ', '+') }}+Aruana+GO" target="_blank" class="btn btn-mapa">
+      🧭 Ver no Google Maps
+    </a>
+
+    <a href="/pegar/{{p.id}}" class="btn btn-pegar">
+      ✅ Marcar como Pego
+    </a>
+  </div>
+</div>
+{% else %}
+<div class="vazio" id="vazio">
+  <span class="vazio-icon">📭</span>
+  <p>Tudo limpo! Nenhuma coleta pendente no momento.</p>
+</div>
+{% endfor %}
+
+</div>
+
+<script>
+const socket = io();
+let somAtivo = false;
+
+function ativarSom(){
+  const audio = document.getElementById("som");
+  audio.play().then(()=>{
+    audio.pause();
+    somAtivo = true;
+    document.getElementById("som-icon").innerText = "✅";
+    alert("Som ativado com sucesso!");
+  }).catch(()=>{
+    alert("Clique novamente para permitir o som no navegador.");
+  });
+}
+
+function tocarSom(){
+  if(!somAtivo) return;
+  const audio = document.getElementById("som");
+  audio.currentTime = 0;
+  audio.play().catch(()=>{});
+}
+
+function criarCard(p){
+  const div = document.createElement("div");
+  div.className = "card";
+  div.id = "pedido-" + p.id;
+
+  div.innerHTML = `
+    <div class="info-grid">
+      <div class="info-item">
+        <span class="label">Cliente</span>
+        <span class="value">${p.cliente}</span>
+      </div>
+      <div class="info-item">
+        <span class="label">Endereço de Coleta</span>
+        <div class="address-box">📍 ${p.endereco}</div>
+      </div>
+      <div class="info-item">
+        <span class="label">Item para recolher</span>
+        <span class="value">${p.ferramenta} <span class="qty-badge">${p.quantidade} un</span></span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco + ' Aruana GO')}" target="_blank" class="btn btn-mapa">
+        🧭 Ver no Google Maps
+      </a>
+
+      <a href="/pegar/${p.id}" class="btn btn-pegar">
+        ✅ Marcar como Pego
+      </a>
+    </div>
+  `;
+  return div;
+}
+
+socket.on("novo_pedido", function(pedido){
+  const lista = document.getElementById("lista");
+  const vazio = document.getElementById("vazio");
+  if(vazio) vazio.remove();
+
+  const card = criarCard(pedido);
+  lista.prepend(card);
+
+  tocarSom();
+  
+  // Notificação visual simples se o navegador suportar
+  if (Notification.permission === "granted") {
+    new Notification("Nova Coleta!", { body: pedido.cliente + " em " + pedido.endereco });
+  }
+});
+
+// Pedir permissão para notificação ao carregar
+if (Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+</script>
+
+</body>
+</html>
