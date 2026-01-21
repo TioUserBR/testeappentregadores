@@ -21,12 +21,7 @@
 
 *{box-sizing:border-box;font-family:'Plus Jakarta Sans',sans-serif}
 
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  padding-bottom:40px;
-}
+body{margin:0;background:var(--bg);color:var(--text);padding-bottom:40px}
 
 header{
   background:#fff;
@@ -48,17 +43,8 @@ header{
   box-shadow:0 4px 12px rgba(0,0,0,.05);
 }
 
-.label{
-  font-size:11px;
-  text-transform:uppercase;
-  color:var(--muted);
-  font-weight:700;
-}
-
-.value{
-  font-weight:600;
-  margin-bottom:6px;
-}
+.label{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.value{font-weight:600;margin-bottom:6px}
 
 .itens-box{
   background:#f1f5f9;
@@ -67,16 +53,9 @@ header{
   margin-top:4px;
 }
 
-.item-linha{
-  font-size:14px;
-  margin-bottom:4px;
-}
+.item-linha{font-size:14px;margin-bottom:4px}
 
-.actions{
-  display:grid;
-  gap:10px;
-  margin-top:12px;
-}
+.actions{display:grid;gap:10px;margin-top:12px}
 
 .btn{
   padding:12px;
@@ -87,21 +66,10 @@ header{
   display:block;
 }
 
-.btn-mapa{
-  background:#e0f2fe;
-  color:#0369a1;
-}
+.btn-mapa{background:#e0f2fe;color:#0369a1}
+.btn-pegar{background:var(--primary);color:#fff}
 
-.btn-pegar{
-  background:var(--primary);
-  color:#fff;
-}
-
-.vazio{
-  text-align:center;
-  margin-top:60px;
-  color:var(--muted);
-}
+.vazio{text-align:center;margin-top:60px;color:var(--muted)}
 
 .btn-som{
   width:calc(100% - 32px);
@@ -128,14 +96,13 @@ header{
 
 {% for p in pedidos %}
 <div class="card" id="pedido-{{p.id}}">
-
   <div class="label">Cliente</div>
   <div class="value">{{p.cliente}}</div>
 
   <div class="label">Endereço</div>
   <div class="value">{{p.endereco}}</div>
 
-  <div class="label">Itens para recolher</div>
+  <div class="label">Itens</div>
   <div class="itens-box">
     {% for i in p.itens %}
       <div class="item-linha">• {{i.nome}} ({{i.qtd}}x)</div>
@@ -152,7 +119,6 @@ header{
        ✅ Marcar como pego
     </a>
   </div>
-
 </div>
 {% else %}
 <div class="vazio" id="vazio">📭 Nenhuma coleta pendente</div>
@@ -161,7 +127,7 @@ header{
 </div>
 
 <script>
-const socket = io();
+const socket = io({ transports:["websocket"] }); // IMPORTANTE p/ Vercel
 let somAtivo=false;
 
 function ativarSom(){
@@ -201,7 +167,7 @@ function criarCard(p){
     <div class="label">Endereço</div>
     <div class="value">${p.endereco}</div>
 
-    <div class="label">Itens para recolher</div>
+    <div class="label">Itens</div>
     <div class="itens-box">${itensHtml}</div>
 
     <div class="actions">
@@ -218,6 +184,7 @@ function criarCard(p){
   return div;
 }
 
+/* NOVO PEDIDO */
 socket.on("novo_pedido",function(p){
   const lista=document.getElementById("lista");
   const vazio=document.getElementById("vazio");
@@ -230,6 +197,17 @@ socket.on("novo_pedido",function(p){
 
   if(Notification.permission==="granted"){
     new Notification("Nova coleta",{body:p.cliente});
+  }
+});
+
+/* REMOVER QUANDO PEGAR */
+socket.on("pedido_atualizado",function(data){
+  const el=document.getElementById("pedido-"+data.id);
+  if(el) el.remove();
+
+  if(document.querySelectorAll(".card").length===0){
+    document.getElementById("lista").innerHTML =
+      '<div class="vazio" id="vazio">📭 Nenhuma coleta pendente</div>';
   }
 });
 
