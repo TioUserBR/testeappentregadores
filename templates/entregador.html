@@ -18,108 +18,22 @@
 --card:#1a1a1a;
 --border:rgba(255,255,255,.1);
 }
-
 *{box-sizing:border-box;font-family:Outfit,sans-serif}
-
-body{
-margin:0;
-background:var(--bg);
-color:#fff;
-}
-
-header{
-padding:16px;
-text-align:center;
-border-bottom:2px solid var(--yellow);
-}
-
-.container{
-max-width:650px;
-margin:auto;
-padding:20px;
-}
-
-.btn-som{
-width:100%;
-padding:14px;
-margin-bottom:20px;
-background:transparent;
-border:1px solid var(--yellow);
-color:var(--yellow);
-border-radius:12px;
-font-weight:800;
-cursor:pointer;
-}
-
-.card{
-background:var(--card);
-border:1px solid var(--border);
-border-radius:18px;
-padding:20px;
-margin-bottom:20px;
-}
-
-.label{
-font-size:12px;
-color:var(--yellow);
-text-transform:uppercase;
-font-weight:800;
-margin-top:10px;
-}
-
-.value{
-font-size:16px;
-font-weight:600;
-margin-bottom:10px;
-}
-
-.itens-box{
-background:#111;
-border:1px solid var(--border);
-border-radius:12px;
-padding:10px;
-}
-
-.item-linha{
-color:#ccc;
-margin:4px 0;
-}
-
-.actions{
-margin-top:15px;
-display:grid;
-gap:10px;
-}
-
-.btn{
-padding:12px;
-border-radius:10px;
-text-decoration:none;
-font-weight:800;
-text-align:center;
-}
-
-.btn-mapa{
-border:1px solid var(--border);
-color:#fff;
-}
-
-.btn-pegar{
-background:linear-gradient(135deg,var(--yellow),var(--orange));
-color:#000;
-}
-
-.vazio{
-text-align:center;
-margin-top:80px;
-color:#777;
-}
-
-.vazio i{
-font-size:60px;
-color:var(--yellow);
-opacity:.3;
-}
+body{margin:0;background:var(--bg);color:#fff}
+header{padding:16px;text-align:center;border-bottom:2px solid var(--yellow)}
+.container{max-width:650px;margin:auto;padding:20px}
+.btn-som{width:100%;padding:14px;margin-bottom:20px;background:transparent;border:1px solid var(--yellow);color:var(--yellow);border-radius:12px;font-weight:800;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:20px}
+.label{font-size:12px;color:var(--yellow);text-transform:uppercase;font-weight:800;margin-top:10px}
+.value{font-size:16px;font-weight:600;margin-bottom:10px}
+.itens-box{background:#111;border:1px solid var(--border);border-radius:12px;padding:10px}
+.item-linha{color:#ccc;margin:4px 0}
+.actions{margin-top:15px;display:grid;gap:10px}
+.btn{padding:12px;border-radius:10px;text-decoration:none;font-weight:800;text-align:center}
+.btn-mapa{border:1px solid var(--border);color:#fff}
+.btn-pegar{background:linear-gradient(135deg,var(--yellow),var(--orange));color:#000}
+.vazio{text-align:center;margin-top:80px;color:#777}
+.vazio i{font-size:60px;color:var(--yellow);opacity:.3}
 </style>
 </head>
 <body>
@@ -130,19 +44,15 @@ opacity:.3;
 
 <div class="container">
 
-<button class="btn-som" onclick="ativarSom()">
-🔊 Ativar notificações sonoras
-</button>
+<button class="btn-som" onclick="ativarSom()">🔊 Ativar notificações sonoras</button>
 
 <audio id="som" preload="auto">
 <source src="/static/notificacao.mp3" type="audio/mpeg">
 </audio>
 
 <div id="lista">
-
 {% for p in pedidos %}
 <div class="card" id="pedido-{{p.id}}">
-
 <div class="label">Cliente</div>
 <div class="value">{{p.cliente}}</div>
 
@@ -158,15 +68,12 @@ opacity:.3;
 
 <div class="actions">
 <a class="btn btn-mapa" target="_blank"
-href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | urlencode }}+Aruan%C3%A3+GO">
+href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | urlencode }}+Aruan%C3%A3+GO}">
 🧭 Rota no mapa
 </a>
 
-<a class="btn btn-pegar" href="/pegar/{{p.id}}">
-✅ Confirmar coleta
-</a>
+<a class="btn btn-pegar" href="/pegar/{{p.id}}">✅ Confirmar coleta</a>
 </div>
-
 </div>
 {% else %}
 <div class="vazio" id="vazio">
@@ -174,27 +81,30 @@ href="https://www.google.com/maps/search/?api=1&query={{ p.endereco | urlencode 
 <p>Nenhuma coleta pendente</p>
 </div>
 {% endfor %}
-
 </div>
 </div>
 
 <script>
-/* ================= SOCKET ================= */
+const socket = io({transports:["websocket"],upgrade:false,reconnection:true});
 
-const socket = io({
-  transports:["websocket"],
-  upgrade:false,
-  reconnection:true,
-  reconnectionAttempts:Infinity,
-  reconnectionDelay:1000,
-  timeout:20000
+socket.on("connect", ()=>{
+  console.log("✅ Conectado");
+
+  // sincroniza pedidos ao conectar/reconectar
+  fetch("/api/pendentes")
+    .then(r=>r.json())
+    .then(lista=>{
+      document.getElementById("lista").innerHTML="";
+      if(lista.length===0){
+        document.getElementById("lista").innerHTML=vazioHTML();
+      }else{
+        lista.forEach(p=>{
+          const c=criarCard(p);
+          if(c) document.getElementById("lista").appendChild(c);
+        });
+      }
+    });
 });
-
-socket.on("connect",()=>console.log("✅ Socket conectado"));
-socket.on("disconnect",()=>console.log("❌ Socket desconectado"));
-socket.on("connect_error",e=>console.error("🔥 Socket erro:",e.message));
-
-/* ================= SOM ================= */
 
 let somAtivo=false;
 
@@ -204,8 +114,6 @@ function ativarSom(){
    audio.pause();
    somAtivo=true;
    alert("🔊 Som ativado!");
- }).catch(()=>{
-   alert("Clique novamente para permitir o som.");
  });
 }
 
@@ -216,11 +124,10 @@ function tocarSom(){
  audio.play().catch(()=>{});
 }
 
-/* ================= CARDS ================= */
-
 function criarCard(p){
+ if(document.getElementById("pedido-"+p.id)) return null;
 
- if(document.getElementById("pedido-"+p.id)) return;
+ if(!p.itens) p.itens=[];
 
  let itensHtml="";
  p.itens.forEach(i=>{
@@ -232,64 +139,48 @@ function criarCard(p){
  div.id="pedido-"+p.id;
 
  div.innerHTML=`
- <div class="label">Cliente</div>
- <div class="value">${p.cliente}</div>
-
- <div class="label">Endereço</div>
- <div class="value">${p.endereco}</div>
-
- <div class="label">Itens</div>
- <div class="itens-box">${itensHtml}</div>
-
- <div class="actions">
-   <a class="btn btn-mapa" target="_blank"
-   href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco+" Aruanã GO")}">
-   🧭 Rota no mapa</a>
-
-   <a class="btn btn-pegar" href="/pegar/${p.id}">
-   ✅ Confirmar coleta</a>
- </div>
- `;
-
+<div class="label">Cliente</div>
+<div class="value">${p.cliente}</div>
+<div class="label">Endereço</div>
+<div class="value">${p.endereco}</div>
+<div class="label">Itens</div>
+<div class="itens-box">${itensHtml}</div>
+<div class="actions">
+<a class="btn btn-mapa" target="_blank"
+href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.endereco+" Aruanã GO")}">🧭 Rota no mapa</a>
+<a class="btn btn-pegar" href="/pegar/${p.id}">✅ Confirmar coleta</a>
+</div>`;
  return div;
 }
 
-/* ================= EVENTOS ================= */
+function vazioHTML(){
+ return `<div class="vazio" id="vazio">
+<i class="fas fa-box-open"></i>
+<p>Nenhuma coleta pendente</p></div>`;
+}
 
 socket.on("novo_pedido",p=>{
-
- console.log("📦 Novo pedido:",p);
-
  tocarSom();
 
  if(Notification.permission==="granted"){
-   new Notification("🚚 Nova coleta disponível",{
-     body:`${p.cliente}\n${p.endereco}`
-   });
+  new Notification("🚚 Nova coleta",{body:`${p.cliente}\n${p.endereco}`});
  }
 
- const lista=document.getElementById("lista");
- const vazio=document.getElementById("vazio");
- if(vazio) vazio.remove();
+ const v=document.getElementById("vazio");
+ if(v) v.remove();
 
- const card=criarCard(p);
- if(card) lista.prepend(card);
+ const c=criarCard(p);
+ if(c) document.getElementById("lista").prepend(c);
 });
 
-socket.on("pedido_atualizado",data=>{
- const el=document.getElementById("pedido-"+data.id);
+socket.on("pedido_atualizado",d=>{
+ const el=document.getElementById("pedido-"+d.id);
  if(el) el.remove();
 
  if(document.querySelectorAll(".card").length===0){
-   document.getElementById("lista").innerHTML=`
-   <div class="vazio" id="vazio">
-   <i class="fas fa-box-open"></i>
-   <p>Nenhuma coleta pendente</p>
-   </div>`;
+  document.getElementById("lista").innerHTML=vazioHTML();
  }
 });
-
-/* ================= NOTIFICAÇÃO ================= */
 
 if("Notification" in window && Notification.permission!=="granted"){
  Notification.requestPermission();
