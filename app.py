@@ -4,6 +4,7 @@ from flask_socketio import SocketIO
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from dotenv import load_dotenv
 import eventlet
 eventlet.monkey_patch()
@@ -121,7 +122,8 @@ def enviar():
     ferramentas = request.form.getlist("ferramenta[]")
     quantidades = request.form.getlist("quantidade[]")
 
-    hora = datetime.now().strftime("%d/%m/%Y %H:%M")
+    hora = datetime.now(ZoneInfo("America/Sao_Paulo")).strftime("%d/%m/%Y %H:%M")
+
 
     db = get_db()
     c = db.cursor()
@@ -213,5 +215,6 @@ def apagar(id):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     socketio.run(app, host="0.0.0.0", port=port)
+
 
 
